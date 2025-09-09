@@ -1,0 +1,246 @@
+= 🔐 Setting Up Confluent Cloud (15 minutes)
+Viktor Gamov <vgamov@confluent.io>, © 2025 Confluent, Inc.
+2025-09-11
+:revdate: 2025-09-11
+:linkattrs:
+:ast: &ast;
+:y: &#10003;
+:n: &#10008;
+:y: icon:check-sign[role="green"]
+:n: icon:check-minus[role="red"]
+:c: icon:file-text-alt[role="blue"]
+:toc: auto
+:toc-placement: auto
+:toc-position: auto
+:toc-title: Setup Guide Contents
+:toclevels: 3
+:idprefix:
+:idseparator: -
+:sectanchors:
+:icons: font
+:source-highlighter: highlight.js
+:highlightjs-theme: idea
+:experimental:
+
+This guide walks you through setting up your Confluent Cloud environment for the workshop.
+
+toc::[]
+
+== 🎯 Learning Objectives
+
+By the end of this section, you will have:
+
+* ✅ Validated all prerequisite tools are installed
+* ✅ Authenticated with Confluent Cloud
+* ✅ Created a working Kafka cluster
+* ✅ Generated API keys for cluster access
+
+== ⏱️ Time Allocation
+
+* **Prerequisites Validation**: 3 minutes
+* **Authentication & Environment Setup**: 7 minutes  
+* **Kafka Cluster Creation**: 5 minutes
+
+== 🔍 Prerequisites Validation (3 minutes)
+
+=== Check VSCode Confluent Extension
+
+. Open VSCode
+. Go to Extensions (Ctrl+Shift+X / Cmd+Shift+X)
+. Search for "Confluent"
+. Verify the Confluent extension is installed and enabled
+
+[source,bash]
+----
+# Alternative: Check if extension is installed via CLI
+code --list-extensions | grep confluent
+----
+
+=== Verify Confluent CLI Installation
+
+[source,bash]
+----
+# Check CLI installation and version
+confluent version
+
+# Expected output should show version 3.x or higher
+# confluent - Confluent CLI
+# Version:     v3.x.x
+# Git Ref:     xxxxxxx
+# Build Date:  2024-xx-xx
+----
+
+If not installed, run:
+[source,bash]
+----
+# Install Confluent CLI
+curl -sL --http1.1 https://cnfl.io/cli | sh -s -- latest
+----
+
+=== Validate DuckDB Installation
+
+[source,bash]
+----
+# Check DuckDB installation
+duckdb --version
+
+# Expected output: v0.x.x or higher
+----
+
+If not installed, visit: https://duckdb.org/docs/installation/
+
+== 🌍 Authentication & Environment Setup (7 minutes)
+
+=== Login to Confluent Cloud
+
+[source,bash]
+----
+# Login to Confluent Cloud
+confluent login --save
+
+# This will open your browser for authentication
+# Complete the login process in your browser
+----
+
+=== Create or Select Organization
+
+[source,bash]
+----
+# List available organizations
+confluent organization list
+
+# If you need to create an organization (usually not needed for workshop)
+# confluent organization create "Workshop Org"
+----
+
+=== Create Workshop Environment
+
+[source,bash]
+----
+# Create a new environment for the workshop
+confluent environment create "cc-workshop-env"
+
+# List environments to see your new environment
+confluent environment list
+
+# Use the workshop environment (replace ENV_ID with actual ID)
+confluent environment use <ENV_ID>
+----
+
+== ☁️ Kafka Cluster Creation (5 minutes)
+
+=== Create Basic Kafka Cluster
+
+[source,bash]
+----
+# Create a Basic cluster (suitable for development/workshop)
+confluent kafka cluster create workshop-cluster \
+  --cloud aws \
+  --region us-east-1 \
+  --type basic
+
+# Note: Basic clusters are free and perfect for workshops
+# They have some limitations but are sufficient for our use case
+----
+
+=== Configure Cluster Settings
+
+[source,bash]
+----
+# List clusters to get cluster ID
+confluent kafka cluster list
+
+# Use the cluster (replace CLUSTER_ID with actual ID)
+confluent kafka cluster use <CLUSTER_ID>
+
+# Describe cluster to verify settings
+confluent kafka cluster describe <CLUSTER_ID>
+----
+
+=== Generate API Keys
+
+[source,bash]
+----
+# Create API key for cluster access
+confluent api-key create --resource <CLUSTER_ID> --description "Workshop API Key for Kafka Cluster"
+
+# Store the API key and secret - you'll need them later
+# API Key: <your-api-key>
+# API Secret: <your-api-secret>
+
+# Use the API key
+confluent api-key use <your-api-key> --resource <CLUSTER_ID>
+----
+
+=== Validate Cluster Connectivity
+
+[source,bash]
+----
+# Test cluster connectivity by listing topics (should be empty initially)
+confluent kafka topic list
+
+# If successful, you should see an empty list or system topics
+----
+
+== ✅ Validation Checklist
+
+Before proceeding to the next section, ensure:
+
+- [ ] VSCode Confluent Extension is installed and working
+- [ ] Confluent CLI is installed (version 3.x+)
+- [ ] DuckDB is installed and accessible
+- [ ] Successfully logged into Confluent Cloud
+- [ ] Workshop environment created and active
+- [ ] Basic Kafka cluster created and running
+- [ ] API keys generated and configured
+- [ ] Cluster connectivity validated
+
+== 🔧 Key Deliverables
+
+At the end of this section, you should have:
+
+* **Working Confluent Cloud environment** with proper authentication
+* **Authenticated CLI session** with saved context
+* **Basic Kafka cluster** ready for topic creation and data streaming
+* **API keys configured** for programmatic access
+
+== 🚨 Troubleshooting
+
+=== Common Issues
+
+**CLI Login Issues**::
+If browser doesn't open automatically:
+[source,bash]
+----
+# Try manual login with --no-browser flag
+confluent login --save --no-browser
+# Follow the provided URL manually
+----
+
+**Cluster Creation Fails**::
+Check your account limits:
+[source,bash]
+----
+# Check service quotas
+confluent service-quota list
+----
+
+**API Key Issues**::
+If API key creation fails:
+[source,bash]
+----
+# List existing API keys
+confluent api-key list
+# Delete unused keys if you hit the limit
+confluent api-key delete <key-id>
+----
+
+== 📚 Additional Resources
+
+* https://docs.confluent.io/confluent-cli/current/install.html[Confluent CLI Installation Guide]
+* https://docs.confluent.io/cloud/current/get-started/index.html[Confluent Cloud Getting Started]
+* https://docs.confluent.io/cloud/current/clusters/cluster-types.html[Kafka Cluster Types]
+
+---
+
+**Next**: Proceed to `02-kafka-hands-on.adoc` for Kafka topic management and HTTP connector setup.
