@@ -61,12 +61,19 @@ echo "----------------------"
 if command -v code &> /dev/null; then
     echo -e "✅ ${GREEN}VSCode is installed${RESET}"
     
-    # Check Confluent extension
-    if code --list-extensions | grep -q "confluent"; then
+    # Check Confluent extension (handle both local and devcontainer environments)
+    if code --list-extensions 2>/dev/null | grep -q "confluent" || \
+       ls ~/.vscode-server/extensions/confluent.* 2>/dev/null | grep -q "confluent" || \
+       ls /home/vscode/.vscode-server/extensions/confluent.* 2>/dev/null | grep -q "confluent"; then
         echo -e "✅ ${GREEN}Confluent VSCode Extension is installed${RESET}"
     else
         echo -e "❌ ${RED}Confluent VSCode Extension is NOT installed${RESET}"
         echo "   📥 Install from VSCode Extensions marketplace"
+        # In devcontainer, try to install it automatically
+        if [ "$WORKSHOP_ENV" = "codespaces" ] || [ -n "$REMOTE_CONTAINERS" ]; then
+            echo "   🔄 Attempting automatic installation in devcontainer..."
+            code --install-extension confluent.confluent-cloud --force 2>/dev/null || true
+        fi
         VALIDATION_PASSED=false
     fi
 else

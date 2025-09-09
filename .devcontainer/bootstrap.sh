@@ -42,14 +42,14 @@ echo -e "✅ ${GREEN}Confluent CLI installed${RESET}"
 
 # Install DuckDB
 echo -e "🦆 ${YELLOW}Installing DuckDB...${RESET}"
-DUCKDB_VERSION="v1.3.2"
-# Note: v1.3.2 only has linux-amd64 build, no aarch64
-# For ARM64, we'll use the amd64 version with emulation
 ARCH=$(uname -m)
 if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-    echo -e "   ⚠️  ${YELLOW}ARM64 detected: using amd64 build with emulation${RESET}"
-    DUCKDB_ARCH="linux-amd64"
+    echo -e "   🔧 ${YELLOW}ARM64 detected: using DuckDB v1.2.0 with native ARM64 support${RESET}"
+    DUCKDB_VERSION="v1.2.0"
+    DUCKDB_ARCH="linux-aarch64"
 else
+    echo -e "   💻 ${YELLOW}x86_64 detected: using DuckDB v1.3.2${RESET}"
+    DUCKDB_VERSION="v1.3.2"
     DUCKDB_ARCH="linux-amd64"
 fi
 curl -L "https://github.com/duckdb/duckdb/releases/download/${DUCKDB_VERSION}/duckdb_cli-${DUCKDB_ARCH}.zip" -o duckdb.zip
@@ -61,7 +61,15 @@ echo -e "✅ ${GREEN}DuckDB installed${RESET}"
 
 # Install additional Python packages for workshop
 echo -e "🐍 ${YELLOW}Installing Python packages...${RESET}"
-pip install --user confluent-kafka[avro] requests pandas duckdb-engine sqlalchemy
+# Ensure pip is available - devcontainer features should have installed it
+if command -v pip3 >/dev/null 2>&1; then
+    pip3 install --user confluent-kafka[avro] requests pandas duckdb-engine sqlalchemy
+elif command -v pip >/dev/null 2>&1; then
+    pip install --user confluent-kafka[avro] requests pandas duckdb-engine sqlalchemy
+else
+    echo -e "⚠️  ${YELLOW}pip not found, installing via python3 -m pip${RESET}"
+    python3 -m pip install --user confluent-kafka[avro] requests pandas duckdb-engine sqlalchemy
+fi
 echo -e "✅ ${GREEN}Python packages installed${RESET}"
 
 # Install Java dependencies
@@ -163,5 +171,4 @@ echo "  ✅ DuckDB: $(duckdb --version)"
 echo "  ✅ Python: $(python3 --version)"
 echo "  ✅ Java: $(java -version 2>&1 | head -1)"
 echo ""
-echo -e "💡 ${BLUE}Restart your terminal or run 'source ~/.zshrc' to load workshop aliases${RESET}"
-``
+echo -e "💡 ${BLUE}Restart your terminal or run 'source ~/.zshrc' to load workshop aliases${RESET}"``
