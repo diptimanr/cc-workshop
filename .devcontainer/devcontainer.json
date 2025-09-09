@@ -1,0 +1,80 @@
+{
+  "name": "Confluent Cloud Workshop",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "vscode",
+      "userUid": "automatic",
+      "userGid": "automatic"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
+      "version": "18"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11",
+      "installTools": true
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installMaven": true,
+      "installGradle": true
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "confluent.confluent-cloud",
+        "ms-python.python",
+        "ms-python.flake8",
+        "ms-python.black-formatter",
+        "redhat.java",
+        "vscjava.vscode-java-pack",
+        "ms-vscode.makefile-tools",
+        "yzhang.markdown-all-in-one",
+        "streetsidesoftware.code-spell-checker",
+        "ms-vscode.vscode-json"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "python.defaultInterpreterPath": "/usr/local/python/current/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.linting.flake8Enabled": true,
+        "python.formatting.provider": "black",
+        "java.home": "/usr/local/sdkman/candidates/java/current"
+      }
+    }
+  },
+
+  "onCreateCommand": ".devcontainer/bootstrap.sh",
+  "postStartCommand": "echo '🎉 Confluent Cloud Workshop environment ready!'",
+
+  "forwardPorts": [8080, 3000, 5000, 8000],
+  "portsAttributes": {
+    "8080": {
+      "label": "Application Server",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Development Server",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "WORKSHOP_ENV": "codespaces",
+    "CONFLUENT_DISABLE_UPDATES": "true"
+  },
+
+  "mounts": [
+    "source=${localWorkspaceFolder}/.devcontainer/cache,target=/home/vscode/.cache,type=bind,consistency=cached"
+  ]
+}
