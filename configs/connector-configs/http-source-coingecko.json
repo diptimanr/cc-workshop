@@ -1,0 +1,16 @@
+{
+  "name": "coingecko-price-connector",
+  "config": {
+    "connector.class": "HttpSource",
+    "kafka.auth.mode": "KAFKA_API_KEY",
+    "kafka.api.key": "${KAFKA_API_KEY}",
+    "kafka.api.secret": "${KAFKA_API_SECRET}",
+    "topic.name.pattern": "crypto-prices",
+    "url": "https://api.coingecko.com/api/v3/simple/price",
+    "http.request.parameters": "ids=bitcoin,ethereum,binancecoin,cardano,solana&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true&include_last_updated_at=true",
+    "request.interval.ms": "60000",
+    "output.data.format": "AVRO",
+    "tasks.max": "1",
+    "http.initial.offset": "0"
+  }
+}

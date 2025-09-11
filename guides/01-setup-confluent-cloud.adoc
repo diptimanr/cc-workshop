@@ -159,17 +159,57 @@ confluent kafka cluster describe <CLUSTER_ID>
 
 === Generate API Keys
 
+==== Kafka Cluster API Keys
+
 [source,bash]
 ----
 # Create API key for cluster access
 confluent api-key create --resource <CLUSTER_ID> --description "Workshop API Key for Kafka Cluster"
 
 # Store the API key and secret - you'll need them later
-# API Key: <your-api-key>
-# API Secret: <your-api-secret>
+# API Key: <your-kafka-api-key>
+# API Secret: <your-kafka-api-secret>
 
 # Use the API key
-confluent api-key use <your-api-key> --resource <CLUSTER_ID>
+confluent api-key use <your-kafka-api-key> --resource <CLUSTER_ID>
+----
+
+==== Schema Registry API Keys
+
+[source,bash]
+----
+# Get Schema Registry cluster ID
+confluent schema-registry cluster describe
+
+# Create API key for Schema Registry access
+confluent api-key create --resource <SCHEMA_REGISTRY_CLUSTER_ID> --description "Workshop API Key for Schema Registry"
+
+# Store the Schema Registry API key and secret
+# Schema Registry API Key: <your-sr-api-key>
+# Schema Registry API Secret: <your-sr-api-secret>
+
+# Use the Schema Registry API key
+confluent api-key use <your-sr-api-key> --resource <SCHEMA_REGISTRY_CLUSTER_ID>
+----
+
+==== Store API Keys in Environment File
+
+[source,bash]
+----
+# Navigate to the scripts directory
+cd scripts/kafka
+
+# Copy the example environment file
+cp .env.example .env
+
+# Edit the .env file with your actual API keys:
+# export KAFKA_API_KEY="<your-kafka-api-key>"
+# export KAFKA_API_SECRET="<your-kafka-api-secret>"
+# export SCHEMA_REGISTRY_API_KEY="<your-sr-api-key>"
+# export SCHEMA_REGISTRY_API_SECRET="<your-sr-api-secret>"
+
+# Load the environment variables
+source .env
 ----
 
 === Validate Cluster Connectivity
@@ -192,7 +232,9 @@ Before proceeding to the next section, ensure:
 - [ ] Successfully logged into Confluent Cloud
 - [ ] Workshop environment created and active
 - [ ] Basic Kafka cluster created and running
-- [ ] API keys generated and configured
+- [ ] Kafka cluster API keys generated and configured
+- [ ] Schema Registry API keys generated and configured
+- [ ] API keys stored in `.env` file in `scripts/kafka/` directory
 - [ ] Cluster connectivity validated
 
 == 🔧 Key Deliverables

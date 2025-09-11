@@ -1,0 +1,261 @@
+= 📊 Kafka Hands-On with CoinGecko Data (30 minutes)
+Viktor Gamov <vgamov@confluent.io>, © 2025 Confluent, Inc.
+2025-09-11
+:revdate: 2025-09-11
+:linkattrs:
+:ast: &ast;
+:y: &#10003;
+:n: &#10008;
+:y: icon:check-sign[role="green"]
+:n: icon:check-minus[role="red"]
+:c: icon:file-text-alt[role="blue"]
+:toc: auto
+:toc-placement: auto
+:toc-position: auto
+:toc-title: Kafka Guide Contents
+:toclevels: 3
+:idprefix:
+:idseparator: -
+:sectanchors:
+:icons: font
+:source-highlighter: highlight.js
+:highlightjs-theme: idea
+:experimental:
+
+This guide demonstrates Kafka topic management and real-time data streaming using cryptocurrency price data from CoinGecko API.
+
+toc::[]
+
+== 🎯 Learning Objectives
+
+By the end of this section, you will have:
+
+* ✅ Created Kafka topics with different configurations
+* ✅ Set up HTTP Source Connector for live cryptocurrency data
+* ✅ Monitored real-time price data streaming
+* ✅ Consumed cryptocurrency data using Confluent VS Code Extension
+
+== ⏱️ Time Allocation
+
+* **Topic Management**: 10 minutes
+* **HTTP Source Connector Setup**: 5 minutes
+* **Producer Operations**: 5 minutes
+* **Consumer Operations**: 10 minutes
+
+== 📋 Topic Management (10 minutes)
+
+=== Create Workshop Topics
+
+[source,bash]
+----
+# Create topic for cryptocurrency prices
+confluent kafka topic create crypto-prices \
+  --partitions 3 \
+  --config retention.ms=604800000 \
+  --config cleanup.policy=delete
+
+# Create topic for price alerts (smaller retention)
+confluent kafka topic create price-alerts \
+  --partitions 1 \
+  --config retention.ms=86400000 \
+  --config cleanup.policy=delete
+
+# Create compacted topic for latest prices
+confluent kafka topic create latest-prices \
+  --partitions 3 \
+  --config cleanup.policy=compact \
+  --config min.cleanable.dirty.ratio=0.01
+----
+
+=== Verify Topic Configuration
+
+[source,bash]
+----
+# List all topics
+confluent kafka topic list
+
+# Describe the crypto-prices topic
+confluent kafka topic describe crypto-prices
+
+# List topic configurations
+confluent kafka topic configuration list crypto-prices
+----
+
+=== Topic Configuration Best Practices
+
+[source,bash]
+----
+# Update topic configuration (example: increase retention)
+confluent kafka topic update crypto-prices \
+  --config retention.ms=1209600000
+
+# View updated configuration
+confluent kafka topic configuration list crypto-prices
+----
+
+== 🔌 HTTP Source Connector Setup (5 minutes)
+
+=== Setup Environment Variables
+
+First, configure your API credentials:
+
+[source,bash]
+----
+# Navigate to the scripts directory
+cd scripts/kafka
+
+# Copy the example environment file and configure your API keys
+cp .env.example .env
+
+# Edit .env file with your actual API keys:
+# export KAFKA_API_KEY="your-kafka-key"
+# export KAFKA_API_SECRET="your-kafka-secret"
+# export SCHEMA_REGISTRY_API_KEY="your-schema-registry-key"
+# export SCHEMA_REGISTRY_API_SECRET="your-schema-registry-secret"
+
+# Load environment variables
+source .env
+----
+
+=== Deploy the Connector
+
+[source,bash]
+----
+# Deploy the HTTP Source Connector using the deployment script
+./deploy-connector.sh
+
+# The script will:
+# - Load environment variables from .env
+# - Create connector configuration with CoinGecko API settings
+# - Deploy the coingecko-price-connector
+# - Verify successful deployment
+----
+
+=== Validate Connector Status
+
+[source,bash]
+----
+# Check connector status and health
+./validate-connector.sh
+
+# This will show:
+# - List of all connectors
+# - Connector ID and status
+# - Connection validation
+----
+
+== 🔍 Topic Data (5 minutes)
+
+=== Understand Enhanced Message Structure
+
+The CoinGecko API returns enriched data with market cap and volume information:
+[source,json]
+----
+{
+  "bitcoin": {
+    "usd": 45000.50,
+    "usd_market_cap": 850000000000,
+    "usd_24h_vol": 25000000000,
+    "usd_24h_change": 2.34,
+    "last_updated_at": 1640995200
+  },
+  "ethereum": {
+    "usd": 3500.75,
+    "usd_market_cap": 420000000000,
+    "usd_24h_vol": 15000000000,
+    "usd_24h_change": -1.23,
+    "last_updated_at": 1640995200
+  },
+  "binancecoin": {
+    "usd": 450.25,
+    "usd_market_cap": 67000000000,
+    "usd_24h_vol": 2000000000,
+    "usd_24h_change": 1.85,
+    "last_updated_at": 1640995200
+  }
+}
+----
+
+== 👥 Consumer Operations (10 minutes)
+
+=== Visual Data Consumption with VS Code
+
+The best way to consume and visualize the cryptocurrency data is using the Confluent Extension for Visual Studio Code.
+
+=== Using Confluent VS Code Extension
+
+1. **Install the Extension**: Search for "Confluent" in VS Code Extensions marketplace
+2. **Connect to Confluent Cloud**: Use your Confluent Cloud username and password
+3. **Browse Topics**: Navigate to the `crypto-prices` topic
+4. **Consume Messages**: Click on the topic to start consuming messages visually
+
+image::../images/crypto-prices-vscode.png[Cryptocurrency prices in VS Code,800,600]
+
+The VS Code extension provides:
+
+* **Real-time message visualization** with syntax highlighting
+* **AVRO schema integration** for proper deserialization  
+* **Message filtering and search** capabilities
+* **Offset management** through the UI
+* **Consumer group monitoring** with lag metrics
+
+== ✅ Validation Checklist
+
+Before proceeding to the next section, ensure:
+
+- [ ] Three topics created with different configurations
+- [ ] HTTP Source Connector deployed using `./deploy-connector.sh`
+- [ ] Connector status validated using `./validate-connector.sh`
+- [ ] Real-time cryptocurrency data flowing into crypto-prices topic
+- [ ] Successfully consumed messages using Confluent VS Code Extension
+- [ ] Visual data consumption working with proper AVRO deserialization
+- [ ] Environment variables properly configured in `.env` file
+
+== 🔧 Key Deliverables
+
+At the end of this section, you should have:
+
+* **Multiple topics** with different retention and cleanup policies
+* **HTTP Source Connector** streaming live CoinGecko price data every 60 seconds with AVRO format
+* **Consumer groups** actively consuming real-time cryptocurrency data
+* **Understanding** of connector-based data ingestion and offset management
+
+== 🚨 Troubleshooting
+
+=== Connector Issues
+
+**Connector fails to start**::
+[source,bash]
+----
+# Use the validation script to check connector status
+./validate-connector.sh
+
+# Common issues:
+# - Invalid API key/secret in .env file
+# - Network connectivity
+# - Rate limiting from CoinGecko API
+# - Missing environment variables
+----
+
+**No data flowing**::
+[source,bash]
+----
+# Check connector status using the script
+./validate-connector.sh
+
+# Verify topic exists and has correct permissions
+confluent kafka topic describe crypto-prices
+
+# Check if .env file is properly configured
+source .env && echo "KAFKA_API_KEY: $KAFKA_API_KEY"
+----
+
+== 📚 Additional Resources
+
+* https://docs.confluent.io/cloud/current/connectors/cc-http-source.html[HTTP Source Connector Documentation]
+* https://docs.confluent.io/confluent-cli/current/command-reference/kafka/topic/[Kafka Topic CLI Reference]
+* https://www.coingecko.com/en/api/documentation[CoinGecko API Documentation]
+
+---
+
+**Next**: Proceed to `03-flink-hands-on.adoc` for stream processing with Apache Flink.

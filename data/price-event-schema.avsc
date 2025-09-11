@@ -1,0 +1,159 @@
+{
+  "type": "record",
+  "name": "ConnectDefault",
+  "namespace": "io.confluent.connect.avro",
+  "fields": [
+    {
+      "name": "binancecoin",
+      "type": {
+        "type": "record",
+        "name": "binancecoin",
+        "fields": [
+          {
+            "name": "usd",
+            "type": "double"
+          },
+          {
+            "name": "usd_market_cap",
+            "type": "double"
+          },
+          {
+            "name": "usd_24h_vol",
+            "type": "double"
+          },
+          {
+            "name": "usd_24h_change",
+            "type": "double"
+          },
+          {
+            "name": "last_updated_at",
+            "type": "int"
+          }
+        ],
+        "connect.name": "binancecoin"
+      }
+    },
+    {
+      "name": "bitcoin",
+      "type": {
+        "type": "record",
+        "name": "bitcoin",
+        "namespace": "",
+        "fields": [
+          {
+            "name": "usd",
+            "type": "int"
+          },
+          {
+            "name": "usd_market_cap",
+            "type": "double"
+          },
+          {
+            "name": "usd_24h_vol",
+            "type": "double"
+          },
+          {
+            "name": "usd_24h_change",
+            "type": "double"
+          },
+          {
+            "name": "last_updated_at",
+            "type": "int"
+          }
+        ],
+        "connect.name": "bitcoin"
+      }
+    },
+    {
+      "name": "cardano",
+      "type": {
+        "type": "record",
+        "name": "cardano",
+        "namespace": "",
+        "fields": [
+          {
+            "name": "usd",
+            "type": "double"
+          },
+          {
+            "name": "usd_market_cap",
+            "type": "double"
+          },
+          {
+            "name": "usd_24h_vol",
+            "type": "double"
+          },
+          {
+            "name": "usd_24h_change",
+            "type": "double"
+          },
+          {
+            "name": "last_updated_at",
+            "type": "int"
+          }
+        ],
+        "connect.name": "cardano"
+      }
+    },
+    {
+      "name": "ethereum",
+      "type": {
+        "type": "record",
+        "name": "ethereum",
+        "fields": [
+          {
+            "name": "usd",
+            "type": "double"
+          },
+          {
+            "name": "usd_market_cap",
+            "type": "double"
+          },
+          {
+            "name": "usd_24h_vol",
+            "type": "double"
+          },
+          {
+            "name": "usd_24h_change",
+            "type": "double"
+          },
+          {
+            "name": "last_updated_at",
+            "type": "int"
+          }
+        ],
+        "connect.name": "ethereum"
+      }
+    },
+    {
+      "name": "solana",
+      "type": {
+        "type": "record",
+        "name": "solana",
+        "fields": [
+          {
+            "name": "usd",
+            "type": "double"
+          },
+          {
+            "name": "usd_market_cap",
+            "type": "double"
+          },
+          {
+            "name": "usd_24h_vol",
+            "type": "double"
+          },
+          {
+            "name": "usd_24h_change",
+            "type": "double"
+          },
+          {
+            "name": "last_updated_at",
+            "type": "int"
+          }
+        ],
+        "connect.name": "solana"
+      }
+    }
+  ]
+}

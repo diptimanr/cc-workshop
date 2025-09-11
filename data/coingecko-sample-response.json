@@ -1,0 +1,37 @@
+{
+  "bitcoin": {
+    "usd": 67234.50,
+    "usd_market_cap": 1324567890123.45,
+    "usd_24h_vol": 28456789012.34,
+    "usd_24h_change": 2.34567,
+    "last_updated_at": 1704067200
+  },
+  "ethereum": {
+    "usd": 3456.78,
+    "usd_market_cap": 415678901234.56,
+    "usd_24h_vol": 15234567890.12,
+    "usd_24h_change": -1.23456,
+    "last_updated_at": 1704067200
+  },
+  "binancecoin": {
+    "usd": 312.45,
+    "usd_market_cap": 48123456789.01,
+    "usd_24h_vol": 1234567890.23,
+    "usd_24h_change": 0.87654,
+    "last_updated_at": 1704067200
+  },
+  "cardano": {
+    "usd": 0.4567,
+    "usd_market_cap": 16234567890.12,
+    "usd_24h_vol": 567890123.45,
+    "usd_24h_change": 3.21098,
+    "last_updated_at": 1704067200
+  },
+  "solana": {
+    "usd": 98.76,
+    "usd_market_cap": 43567890123.45,
+    "usd_24h_vol": 2345678901.23,
+    "usd_24h_change": -2.45678,
+    "last_updated_at": 1704067200
+  }
+}
