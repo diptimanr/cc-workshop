@@ -1,0 +1,293 @@
+= 🗄️ Tableflow & Iceberg Setup with DuckDB Analytics (25 minutes)
+Viktor Gamov <vgamov@confluent.io>, © 2025 Confluent, Inc.
+2025-09-11
+:revdate: 2025-09-11
+:linkattrs:
+:ast: &ast;
+:y: &#10003;
+:n: &#10008;
+:y: icon:check-sign[role="green"]
+:n: icon:check-minus[role="red"]
+:c: icon:file-text-alt[role="blue"]
+:toc: auto
+:toc-placement: auto
+:toc-position: auto
+:toc-title: Tableflow Guide Contents
+:toclevels: 3
+:idprefix:
+:idseparator: -
+:sectanchors:
+:icons: font
+:source-highlighter: highlight.js
+:highlightjs-theme: idea
+:experimental:
+
+This guide demonstrates enabling Tableflow for the crypto-prices topic to immediately configure access via Iceberg tables and connect DuckDB for analytics.
+
+toc::[]
+
+== 🎯 Learning Objectives
+
+By the end of this section, you will have:
+
+* ✅ Materialized crypto-prices topic as Iceberg table via Tableflow
+* ✅ Connected DuckDB to Tableflow Iceberg REST Catalog
+* ✅ Created DuckDB secrets and warehouse attachments
+* ✅ Executed real-time analytics queries on streaming data
+* ✅ Set up foundation for Flink-created tables in next step
+
+== ⏱️ Time Allocation
+
+* **Topic Materialization**: 10 minutes
+* **DuckDB Integration Setup**: 10 minutes
+* **Analytics Queries**: 5 minutes
+
+== 📊 Materialize Crypto-Prices Topic (10 minutes)
+
+=== Enable Tableflow for Crypto-Prices
+
+[source,bash]
+----
+# Load environment variables
+cd scripts/kafka
+source .env
+
+# Enable Tableflow for the crypto-prices topic
+# Replace <CLUSTER_ID> with your actual Kafka cluster ID (lkc-XXXXXX)
+confluent tableflow topic enable crypto-prices \
+  --cluster <CLUSTER_ID> \
+  --storage-type MANAGED \
+  --table-formats ICEBERG \
+  --retention-ms 604800000
+
+# Monitor materialization progress
+confluent tableflow topic describe crypto-prices --cluster <CLUSTER_ID>
+
+# Wait for initial data to be materialized (2-3 minutes)
+confluent tableflow topic list --cluster <CLUSTER_ID>
+----
+
+=== Verify Table Creation
+
+[source,bash]
+----
+# List all Tableflow-enabled topics
+confluent tableflow topic list --cluster <CLUSTER_ID>
+
+# Check table schema and sample data
+confluent tableflow topic describe crypto-prices --cluster <CLUSTER_ID>
+----
+
+== 🦆 DuckDB Integration Setup (10 minutes)
+
+=== Start DuckDB with UI
+
+[source,bash]
+----
+# Start DuckDB with web UI interface
+duckdb --ui workshop_analytics.db
+
+# This will start DuckDB and open the web interface
+# Navigate to http://localhost:8080 in your browser
+----
+
+=== Configure DuckDB for Iceberg Access
+
+Create the necessary secret and attach the Iceberg catalog:
+
+[source,sql]
+----
+-- Create secret for Tableflow Iceberg access
+-- Replace with your actual Tableflow API key credentials
+CREATE SECRET iceberg_secret (
+    TYPE ICEBERG,
+    CLIENT_ID 'your-tableflow-api-key',
+    CLIENT_SECRET 'your-tableflow-api-secret',
+    ENDPOINT 'https://tableflow.us-east-1.aws.confluent.cloud/iceberg/catalog/organizations/your-org-id/environments/your-env-id',
+    OAUTH2_SCOPE 'catalog'
+);
+
+-- Attach the Iceberg warehouse
+ATTACH 'warehouse' AS iceberg_catalog (
+    TYPE iceberg,
+    SECRET iceberg_secret,
+    ENDPOINT 'https://tableflow.us-east-1.aws.confluent.cloud/iceberg/catalog/organizations/your-org-id/environments/your-env-id'
+);
+
+-- Verify connection
+SHOW DATABASES;
+----
+
+TIP: You can find your Tableflow API key credentials and endpoint details by running:
+
+[source,bash]
+----
+# Load your environment variables
+cd ../../scripts/kafka
+source .env
+
+# Display the values you need for DuckDB configuration
+echo "CLIENT_ID: $TABLEFLOW_API_KEY"
+echo "CLIENT_SECRET: $TABLEFLOW_API_SECRET" 
+echo "ORG_ID: $CC_ORG_ID"
+echo "ENV_ID: $CC_ENV_ID"
+----
+
+== 📈 Real-Time Analytics Queries (5 minutes)
+
+=== Query Streaming Crypto Data
+
+[source,sql]
+----
+-- First, examine the table structure to understand available columns
+DESCRIBE iceberg_catalog."lkc-XXXXXX"."crypto-prices";
+
+-- Query the crypto-prices data via DuckDB
+SELECT * FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices" LIMIT 10;
+
+-- View recent Bitcoin prices with timestamps
+-- Use the actual column names from the table schema
+SELECT 
+    bitcoin.usd as btc_price,
+    ethereum.usd as eth_price,
+    to_timestamp(bitcoin.last_updated_at) as timestamp
+FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices"
+ORDER BY timestamp DESC 
+LIMIT 20;
+----
+
+=== Real-Time Price Analysis
+
+[source,sql]
+----
+-- Calculate current price statistics
+SELECT 
+    'Bitcoin' as cryptocurrency,
+    AVG(bitcoin.usd) as avg_price,
+    MIN(bitcoin.usd) as min_price,
+    MAX(bitcoin.usd) as max_price,
+    STDDEV(bitcoin.usd) as price_volatility,
+    COUNT(*) as data_points
+FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices"
+WHERE to_timestamp(bitcoin.last_updated_at) >= NOW() - INTERVAL 1 HOUR;
+
+-- Compare cryptocurrency performance
+WITH bitcoin_latest AS (
+    SELECT 
+        'Bitcoin' as crypto,
+        bitcoin.usd as current_price,
+        bitcoin.usd_24h_change as change_24h
+    FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices"
+    ORDER BY bitcoin.last_updated_at DESC
+    LIMIT 1
+),
+ethereum_latest AS (
+    SELECT 
+        'Ethereum' as crypto,
+        ethereum.usd as current_price,
+        ethereum.usd_24h_change as change_24h
+    FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices"
+    ORDER BY ethereum.last_updated_at DESC
+    LIMIT 1
+)
+SELECT * FROM bitcoin_latest
+UNION ALL
+SELECT * FROM ethereum_latest;
+----
+
+=== Time-Series Windowing
+
+[source,sql]
+----
+-- Hourly price aggregations
+SELECT 
+    DATE_TRUNC('hour', to_timestamp(bitcoin.last_updated_at)) as hour,
+    AVG(bitcoin.usd) as avg_btc_price,
+    MIN(bitcoin.usd) as min_btc_price,
+    MAX(bitcoin.usd) as max_btc_price,
+    COUNT(*) as price_updates
+FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices"
+WHERE to_timestamp(bitcoin.last_updated_at) >= NOW() - INTERVAL 6 HOURS
+GROUP BY DATE_TRUNC('hour', to_timestamp(bitcoin.last_updated_at))
+ORDER BY hour DESC;
+----
+
+== ✅ Validation Checklist
+
+Before proceeding to the next section, ensure:
+
+- [ ] Crypto-prices topic successfully materialized as Iceberg table
+- [ ] DuckDB started with UI interface (`--ui` flag)
+- [ ] Iceberg and httpfs extensions installed and loaded
+- [ ] Iceberg secret created with Tableflow credentials
+- [ ] Warehouse attached to Tableflow REST Catalog
+- [ ] Successfully queried crypto-prices data via DuckDB
+- [ ] Real-time analytics queries executing correctly
+- [ ] Foundation ready for Flink-created tables
+
+== 🔧 Key Deliverables
+
+At the end of this section, you should have:
+
+* **Crypto-prices topic** materialized as Iceberg table with hourly partitioning
+* **DuckDB connected** to Tableflow Iceberg REST Catalog
+* **Real-time analytics capability** on streaming cryptocurrency data
+* **Foundation established** for additional Flink-created tables
+
+== 🚨 Troubleshooting
+
+=== Tableflow Issues
+
+**Materialization not starting**::
+[source,bash]
+----
+# Verify topic has data flowing
+confluent kafka topic describe crypto-prices
+
+# Check API key permissions
+confluent tableflow api-key list
+----
+
+=== DuckDB Connection Issues
+
+**Cannot connect to Iceberg catalog**::
+- Verify Tableflow API key and secret are correct
+- Check organization UUID and environment ID in endpoint URL
+- Ensure catalog integration is active and healthy
+
+**Secret creation fails**::
+[source,sql]
+----
+-- Drop and recreate secret if needed
+DROP SECRET iceberg_secret;
+
+-- Recreate with correct credentials
+CREATE SECRET iceberg_secret (
+    TYPE ICEBERG,
+    CLIENT_ID 'your-actual-api-key',
+    CLIENT_SECRET 'your-actual-api-secret',
+    ENDPOINT 'https://tableflow.us-west-2.aws.confluent.cloud/iceberg/catalog/organizations/<UUID>/environments/<env-ID>',
+    OAUTH2_SCOPE 'catalog'
+);
+----
+
+**Table not found errors**::
+[source,sql]
+----
+-- Verify schema and table names
+SHOW SCHEMAS FROM iceberg_catalog;
+SHOW TABLES FROM iceberg_catalog."lkc-XXXXXX";
+
+-- Check if table name matches exactly (topic name with hyphens)
+SELECT * FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices" LIMIT 1;
+----
+
+== 📚 Additional Resources
+
+* https://docs.confluent.io/cloud/current/tableflow/[Tableflow Documentation]
+* https://duckdb.org/docs/stable/core_extensions/iceberg/iceberg_rest_catalogs[DuckDB Iceberg REST Catalogs]
+* https://iceberg.apache.org/docs/latest/[Apache Iceberg Documentation]
+
+---
+
+**Next**: Proceed to `04-flink-hands-on.adoc` for stream processing that will create additional tables exposed via Tableflow.

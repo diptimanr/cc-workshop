@@ -27,6 +27,14 @@ It integrates Kafka for data ingestion, Flink for stream processing, and Tablefl
 DuckDB, a lightweight analytical database, supports querying these Iceberg tables, making it an ideal tool for the workshop's analytics component.
 The workshop is designed for developers with basic programming knowledge, potentially new to Kafka, Flink, or Tableflow, and aims to provide hands-on experience within a condensed time frame.
 
+[IMPORTANT]
+====
+🚨 **CRITICAL - COST PREVENTION**: After completing this workshop, **immediately follow the teardown guide** to prevent unexpected charges from Flink compute pools and Tableflow catalog integrations.
+
+📋 **Teardown Guide**: `guides/05-teardown-resources.adoc`
+
+**Execute teardown steps within 15 minutes of workshop completion** to avoid ongoing billing for cloud resources.
+====
 
 toc::[]
 
@@ -44,12 +52,26 @@ The workshop assumes basic familiarity with programming and provides step-by-ste
 
 == Prerequisites
 
+* *GitHub Account*: Required for accessing GitHub Codespaces or cloning the workshop repository.
+** https://github.com/join[Create a free GitHub account] if you don't have one
 * *VSCode with Confluent Extension*: For managing Confluent Cloud resources.
 ** https://docs.confluent.io/cloud/current/client-apps/vs-code-extension.html[https://docs.confluent.io/cloud/current/client-apps/vs-code-extension.html] 
 * *Confluent CLI*: To interact with Kafka clusters and topics.
 ** https://docs.confluent.io/confluent-cli/current/install.html[https://docs.confluent.io/confluent-cli/current/install.html] 
 * *DuckDB*: For querying Tableflow Iceberg tables.
-** https://duckdb.org/docs/installation/[https://duckdb.org/docs/installation/] 
+** https://duckdb.org/docs/installation/[https://duckdb.org/docs/installation/]
+
+[NOTE]
+====
+🖥️ **Platform Compatibility**: All workshop scripts are designed for Linux and macOS (with zsh shell).
+
+💻 **Windows Users**: We recommend using GitHub Codespaces or VS Code Dev Containers for the best experience. The devcontainer configuration provides a consistent Linux environment with all tools pre-installed.
+
+🚀 **Quick Start Options**:
+* **GitHub Codespaces** (Recommended for Windows): Click "Code" → "Codespaces" → "Create codespace"
+* **Dev Containers**: Open in VS Code → Ctrl+Shift+P → "Dev Containers: Reopen in Container"
+* **Local Setup**: Linux/macOS users can run scripts directly
+==== 
 
 === Workshop Segments and Features Covered
 
@@ -63,4 +85,3 @@ The workshop assumes basic familiarity with programming and provides step-by-ste
 |Tableflow Hands-On|30 min|Tableflow, Iceberg, DuckDB|Materialize and query analytics-ready data
 |Wrap-Up and Q&A|15 min|All features|Summarize and address questions
 |===
-

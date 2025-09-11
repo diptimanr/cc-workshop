@@ -258,4 +258,4 @@ source .env && echo "KAFKA_API_KEY: $KAFKA_API_KEY"
 
 ---
 
-**Next**: Proceed to `03-flink-hands-on.adoc` for stream processing with Apache Flink.
+**Next**: Proceed to `03-tableflow-iceberg-setup.adoc` for Tableflow materialization and DuckDB integration.

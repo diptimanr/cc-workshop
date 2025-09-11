@@ -34,12 +34,14 @@ By the end of this section, you will have:
 * ✅ Authenticated with Confluent Cloud
 * ✅ Created a working Kafka cluster
 * ✅ Generated API keys for cluster access
+* ✅ Validated Tableflow access with existing credentials
 
 == ⏱️ Time Allocation
 
 * **Prerequisites Validation**: 3 minutes
 * **Authentication & Environment Setup**: 7 minutes  
 * **Kafka Cluster Creation**: 5 minutes
+* **Tableflow Validation**: 2 minutes
 
 == 🔍 Prerequisites Validation (3 minutes)
 
@@ -192,6 +194,24 @@ confluent api-key create --resource <SCHEMA_REGISTRY_CLUSTER_ID> --description "
 confluent api-key use <your-sr-api-key> --resource <SCHEMA_REGISTRY_CLUSTER_ID>
 ----
 
+==== Tableflow API Keys
+
+[source,bash]
+----
+# Create API key for Tableflow access
+confluent api-key create --resource tableflow --description "Workshop API Key for Tableflow"
+
+# Store the Tableflow API key and secret
+# Tableflow API Key: <your-tableflow-api-key>
+# Tableflow API Secret: <your-tableflow-api-secret>
+
+# Use the Tableflow API key
+confluent api-key use <your-tableflow-api-key> --resource tableflow
+
+# Test Tableflow access by listing topics (should be empty initially)
+confluent tableflow topic list
+----
+
 ==== Store API Keys in Environment File
 
 [source,bash]
@@ -207,6 +227,8 @@ cp .env.example .env
 # export KAFKA_API_SECRET="<your-kafka-api-secret>"
 # export SCHEMA_REGISTRY_API_KEY="<your-sr-api-key>"
 # export SCHEMA_REGISTRY_API_SECRET="<your-sr-api-secret>"
+# export TABLEFLOW_API_KEY="<your-tableflow-api-key>"
+# export TABLEFLOW_API_SECRET="<your-tableflow-api-secret>"
 
 # Load the environment variables
 source .env
@@ -234,6 +256,7 @@ Before proceeding to the next section, ensure:
 - [ ] Basic Kafka cluster created and running
 - [ ] Kafka cluster API keys generated and configured
 - [ ] Schema Registry API keys generated and configured
+- [ ] Tableflow API keys generated and configured
 - [ ] API keys stored in `.env` file in `scripts/kafka/` directory
 - [ ] Cluster connectivity validated
 
