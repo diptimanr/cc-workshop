@@ -1,0 +1,436 @@
+= 🌊 Flink Stream Processing & Tableflow Integration (45 minutes)
+Viktor Gamov <vgamov@confluent.io>, © 2025 Confluent, Inc.
+2025-09-11
+:revdate: 2025-09-11
+:linkattrs:
+:ast: &ast;
+:y: &#10003;
+:n: &#10008;
+:y: icon:check-sign[role="green"]
+:n: icon:check-minus[role="red"]
+:c: icon:file-text-alt[role="blue"]
+:toc: auto
+:toc-placement: auto
+:toc-position: auto
+:toc-title: Flink Guide Contents
+:toclevels: 3
+:idprefix:
+:idseparator: -
+:sectanchors:
+:icons: font
+:source-highlighter: highlight.js
+:highlightjs-theme: idea
+:experimental:
+
+This guide demonstrates real-time stream processing using Apache Flink to create derived tables that will be automatically exposed via Tableflow for analytics.
+
+toc::[]
+
+== 🎯 Learning Objectives
+
+By the end of this section, you will have:
+
+* ✅ Created and configured a Flink compute pool
+* ✅ Registered Kafka topics as Flink tables
+* ✅ Transformed nested cryptocurrency data into exploded format
+* ✅ Written SQL queries for real-time cryptocurrency analysis
+* ✅ Created derived tables (price-alerts, crypto-trends) for Tableflow
+* ✅ Materialized Flink outputs as Iceberg tables via Tableflow
+* ✅ Queried Flink-created tables through DuckDB
+
+== ⏱️ Time Allocation
+
+* **Flink Environment Setup**: 10 minutes
+* **Data Transformation (Explosion)**: 10 minutes
+* **Stream Processing with SQL**: 15 minutes
+* **Tableflow Integration**: 10 minutes
+* **DuckDB Analytics on Flink Tables**: 10 minutes
+
+== 🏗️ Flink Environment Setup (10 minutes)
+
+=== Create Flink Compute Pool
+
+[source,bash]
+----
+# Create a compute pool for Flink processing
+confluent flink compute-pool create workshop-pool \
+  --cloud aws \
+  --region us-east-1 \
+  --max-cfu 5 \
+  --environment $CC_ENV_ID
+
+# List compute pools to verify creation
+confluent flink compute-pool list
+
+# Use the compute pool (replace POOL_ID with actual ID)
+confluent flink compute-pool use $FLINK_POOL_ID
+----
+
+=== Configure Compute Pool Settings
+
+[source,bash]
+----
+# Describe the compute pool
+confluent flink compute-pool describe $FLINK_POOL_ID
+
+# Update compute pool if needed (optional)
+confluent flink compute-pool update $FLINK_POOL_ID --max-cfu 10
+----
+
+=== Set Up Flink CLI Context
+
+[source,bash]
+----
+# Verify Flink connectivity
+confluent flink shell --compute-pool $FLINK_POOL_ID
+----
+
+=== Explore Table Schemas and Metadata
+
+[source,sql]
+----
+-- Show all tables
+SHOW TABLES;
+
+-- Describe the crypto_prices table
+DESCRIBE `crypto-prices`;
+
+-- Show table creation statement
+SHOW CREATE TABLE `crypto-prices`;
+----
+
+== 🔄 Data Transformation: Exploding Nested Cryptocurrency Data (10 minutes)
+
+=== Create Exploded Cryptocurrency Table
+
+The first step in our stream processing pipeline is to transform the nested cryptocurrency data from the CoinGecko API into individual records for each coin. This "explosion" operation makes the data easier to work with in subsequent analytics.
+
+[source,sql]
+----
+include::../scripts/flink/crypto-prices-exploded.flink.sql[]
+----
+
+=== Verify Exploded Data Structure
+
+[source,sql]
+----
+-- Check the structure of the exploded table
+DESCRIBE `crypto-prices-exploded`;
+
+-- View sample data from the exploded table
+SELECT * FROM `crypto-prices-exploded` LIMIT 10;
+
+-- Count records per cryptocurrency
+SELECT 
+    coin_id,
+    COUNT(*) as record_count,
+    AVG(usd) as avg_price,
+    MIN(event_time) as earliest_update,
+    MAX(event_time) as latest_update
+FROM `crypto-prices-exploded`
+GROUP BY coin_id;
+----
+
+=== Benefits of Data Explosion
+
+The exploded format provides several advantages:
+
+* **Simplified Analytics**: Each row represents a single cryptocurrency, making aggregations easier
+* **Better Performance**: Queries can filter by `coin_id` more efficiently
+* **Cleaner Joins**: Easier to join with other tables or external data sources
+* **Standardized Schema**: All cryptocurrencies follow the same column structure
+
+== 💹 Stream Processing with SQL (15 minutes)
+
+=== Basic SELECT Statements on Exploded Cryptocurrency Streams
+
+[source,sql]
+----
+-- View live cryptocurrency prices from exploded data
+SELECT 
+  coin_id,
+  usd as current_price,
+  usd_24h_change as daily_change_pct,
+  usd_market_cap as market_cap,
+  event_time
+FROM `crypto-prices-exploded`
+ORDER BY event_time DESC
+LIMIT 20;
+
+-- Filter for significant price changes using exploded data
+SELECT 
+  coin_id,
+  usd as price,
+  usd_24h_change as change_pct,
+  usd_market_cap as market_cap,
+  event_time
+FROM `crypto-prices-exploded`
+WHERE ABS(usd_24h_change) > 3.0;
+
+-- Compare current prices across cryptocurrencies
+SELECT 
+  coin_id,
+  usd as current_price,
+  usd_24h_change as daily_change,
+  CASE 
+    WHEN usd_24h_change > 0 THEN '📈 UP'
+    WHEN usd_24h_change < 0 THEN '📉 DOWN'
+    ELSE '➡️ FLAT'
+  END as trend_indicator
+FROM `crypto-prices-exploded`
+WHERE event_time >= CURRENT_TIMESTAMP - INTERVAL '5' MINUTES;
+----
+
+=== Price Change Filtering and Transformations
+
+[source,sql]
+----
+include::../scripts/flink/price-alerts.flink.sql[]
+----
+
+=== Window Operations for Moving Averages
+
+[source,sql]
+----
+-- Calculate 5-minute moving averages using exploded data
+SELECT 
+  coin_id as cryptocurrency,
+  window_start,
+  window_end,
+  AVG(usd) as avg_price,
+  MIN(usd) as min_price,
+  MAX(usd) as max_price,
+  AVG(usd_market_cap) as avg_market_cap,
+  AVG(usd_24h_vol) as avg_volume,
+  COUNT(*) as price_updates
+FROM TABLE(
+  TUMBLE(TABLE `crypto-prices-exploded`, DESCRIPTOR(event_time), INTERVAL '5' MINUTES)
+)
+GROUP BY coin_id, window_start, window_end;
+
+-- Price volatility calculation using sliding windows with TVF syntax
+SELECT 
+  coin_id as cryptocurrency,
+  w.window_start,
+  w.window_end,
+  AVG(usd) as avg_price,
+  STDDEV(usd) as price_volatility,
+  (MAX(usd) - MIN(usd)) / AVG(usd) * 100 as price_range_pct,
+  AVG(ABS(usd_24h_change)) as avg_daily_volatility
+FROM TABLE(
+  HOP(TABLE `crypto-prices-exploded`, DESCRIPTOR(event_time), INTERVAL '1' MINUTES, INTERVAL '5' MINUTES)
+) AS w
+GROUP BY coin_id, w.window_start, w.window_end;
+----
+
+=== Create Derived Streams for Trends
+
+[source,sql]
+----
+include::../scripts/flink/crypto-trends.flink.sql[]
+----
+
+== 🗄️ Tableflow Integration (10 minutes)
+
+=== Materialize Flink Output Tables
+
+Now that Flink is creating derived tables, let's expose them via Tableflow for analytics:
+
+[source,bash]
+----
+# Load environment variables
+cd ./scripts/kafka
+source .env
+
+# Enable Tableflow for the price-alerts topic created by Flink
+confluent tableflow topic enable price-alerts \
+  --cluster $CC_KAFKA_CLUSTER \
+  --storage-type MANAGED \
+  --table-formats ICEBERG \
+  --retention-ms 604800000
+
+# Enable Tableflow for the crypto-trends topic created by Flink
+confluent tableflow topic enable crypto-trends \
+  --cluster $CC_KAFKA_CLUSTER \
+  --storage-type MANAGED \
+  --table-formats ICEBERG \
+  --retention-ms 604800000
+
+# Monitor materialization progress
+confluent tableflow topic list --cluster $CC_KAFKA_CLUSTER
+confluent tableflow topic describe price-alerts --cluster $CC_KAFKA_CLUSTER
+confluent tableflow topic describe crypto-trends --cluster $CC_KAFKA_CLUSTER
+----
+
+=== Verify Flink Table Materialization
+
+[source,bash]
+----
+# Check that all tables are now available
+confluent tableflow topic list --cluster $CC_KAFKA_CLUSTER
+
+# Verify schemas match Flink output
+confluent tableflow topic describe price-alerts --cluster $CC_KAFKA_CLUSTER -o json
+confluent tableflow topic describe crypto-trends --cluster $CC_KAFKA_CLUSTER -o json
+
+# Wait for data to flow (2-3 minutes)
+confluent tableflow topic describe price-alerts --cluster $CC_KAFKA_CLUSTER -o json
+----
+
+== 🦆 DuckDB Analytics on Flink Tables (10 minutes)
+
+=== Query Flink-Created Tables
+
+Return to your DuckDB session (or start a new one with `duckdb --ui workshop_analytics.db`):
+
+[source,sql]
+----
+-- Query price alerts created by Flink
+SELECT * FROM iceberg_catalog."lkc-XXXXXX"."price-alerts" 
+ORDER BY alert_time DESC 
+LIMIT 10;
+
+-- Analyze alert patterns
+SELECT 
+    cryptocurrency,
+    alert_type,
+    COUNT(*) as alert_count,
+    AVG(price_change) as avg_change,
+    MIN(alert_time) as first_alert,
+    MAX(alert_time) as latest_alert
+FROM iceberg_catalog."lkc-XXXXXX"."price-alerts"
+WHERE alert_time >= NOW() - INTERVAL 2 HOURS
+GROUP BY cryptocurrency, alert_type
+ORDER BY alert_count DESC;
+----
+
+=== Monitor Application Status and Metrics
+
+[source,bash]
+----
+# List running Flink statements/applications
+confluent flink statement list
+
+# Describe a specific statement
+confluent flink statement describe $FLINK_STATEMENT_ID
+
+# Check application logs
+confluent flink statement describe $FLINK_STATEMENT_ID --show-logs
+----
+
+You can also monitor your Flink statements directly in VS Code using the Confluent extension:
+
+.Flink Statements in VS Code
+image::../images/flink-statements-vscode.png[Flink Statements VS Code,800,align="center"]
+
+=== Manage Application Lifecycle
+
+[source,bash]
+----
+# Stop a running statement
+confluent flink statement stop $FLINK_STATEMENT_ID
+
+# Resume a stopped statement
+confluent flink statement resume $FLINK_STATEMENT_ID
+
+# Delete a statement
+confluent flink statement delete $FLINK_STATEMENT_ID
+----
+
+=== Troubleshoot Common Issues
+
+[source,bash]
+----
+# Check compute pool status
+confluent flink compute-pool describe $FLINK_POOL_ID
+
+# View statement execution plan
+confluent flink statement explain $FLINK_STATEMENT_ID
+
+# Monitor resource usage
+confluent flink compute-pool describe $FLINK_POOL_ID --show-metrics
+----
+
+== ✅ Validation Checklist
+
+Before proceeding to the next section, ensure:
+
+- [ ] Flink compute pool created and running
+- [ ] Kafka topics registered as Flink tables
+- [ ] Basic SQL queries executed successfully
+- [ ] Price alert logic implemented and running
+- [ ] Window operations for moving averages working
+- [ ] Flink output topics materialized via Tableflow
+- [ ] DuckDB analytics queries on Flink-created tables working
+- [ ] Cross-table analytics between alerts and trends functional
+
+== 🔧 Key Deliverables
+
+At the end of this section, you should have:
+
+* **Flink compute pool** configured and running with adequate resources
+* **Kafka topics** registered as Flink tables with proper schema
+* **Multiple stream processing jobs** running real-time cryptocurrency analysis
+* **Flink-created tables** materialized as Iceberg tables via Tableflow
+* **DuckDB analytics** on both raw and processed cryptocurrency data
+
+== 🚨 Troubleshooting
+
+=== Compute Pool Issues
+
+**Insufficient CFUs**::
+[source,bash]
+----
+# Increase compute pool capacity
+confluent flink compute-pool update $FLINK_POOL_ID --max-cfu 10
+----
+
+**Connection timeouts**::
+[source,bash]
+----
+# Check compute pool status
+confluent flink compute-pool describe $FLINK_POOL_ID
+
+# Restart compute pool if needed
+confluent flink compute-pool stop $FLINK_POOL_ID
+confluent flink compute-pool start $FLINK_POOL_ID
+----
+
+=== SQL Execution Issues
+
+**Table not found errors**::
+[source,sql]
+----
+-- Verify table exists
+SHOW TABLES;
+
+-- Check table definition
+DESCRIBE crypto_prices;
+----
+
+**Serialization errors**::
+- Verify JSON format matches table schema
+- Check Kafka connector configuration
+- Validate data types in CREATE TABLE statement
+
+=== Performance Issues
+
+**High latency**::
+- Increase compute pool CFUs
+- Optimize window sizes
+- Review watermark configuration
+
+**Memory issues**::
+- Reduce window sizes
+- Implement data filtering earlier in pipeline
+- Consider data partitioning strategies
+
+== 📚 Additional Resources
+
+* https://docs.confluent.io/cloud/current/flink/[Confluent Cloud for Apache Flink]
+* https://docs.confluent.io/confluent-cli/current/command-reference/flink/[Flink CLI Reference]
+* https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/table/sql/queries/window-tvf/[Flink SQL Window Functions]
+
+---
+
+**Next**: Proceed to `05-advanced-analytics.adoc` for advanced analytics and workshop completion.
