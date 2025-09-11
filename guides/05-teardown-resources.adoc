@@ -1,0 +1,459 @@
+= 🧹 Workshop Teardown Guide - Prevent Accidental Charges (15 minutes)
+Viktor Gamov <vgamov@confluent.io>, © 2025 Confluent, Inc.
+2025-09-11
+:revdate: 2025-09-11
+:linkattrs:
+:ast: &ast;
+:y: &#10003;
+:n: &#10008;
+:y: icon:check-sign[role="green"]
+:n: icon:check-minus[role="red"]
+:c: icon:file-text-alt[role="blue"]
+:toc: auto
+:toc-placement: auto
+:toc-position: auto
+:toc-title: Teardown Guide Contents
+:toclevels: 3
+:idprefix:
+:idseparator: -
+:sectanchors:
+:icons: font
+:source-highlighter: highlight.js
+:highlightjs-theme: idea
+:experimental:
+
+[IMPORTANT]
+====
+🚨 **CRITICAL**: This guide helps you properly clean up all Confluent Cloud resources created during the workshop to **prevent unexpected charges**. 
+
+**Execute these steps immediately after completing the workshop** to avoid ongoing costs from Flink compute pools, Tableflow catalog integrations, and other billable resources.
+====
+
+This guide provides step-by-step instructions to safely tear down all workshop resources and prevent accidental billing.
+
+toc::[]
+
+== 🎯 Teardown Objectives
+
+By the end of this teardown process, you will have:
+
+* ✅ Stopped all running Flink applications and compute pools
+* ✅ Deleted Tableflow catalog integrations and materialized tables
+* ✅ Removed HTTP Source Connectors
+* ✅ Cleaned up API keys and access credentials
+* ✅ Deleted Kafka topics and cluster (optional)
+* ✅ Removed the workshop environment (optional)
+* ✅ Verified no ongoing charges
+
+== ⏱️ Time Allocation
+
+* **High-Priority Cleanup (Cost-Critical)**: 8 minutes
+* **Standard Resource Cleanup**: 5 minutes
+* **Final Verification**: 2 minutes
+
+== 🚨 High-Priority Cleanup - Stop Billing Immediately (8 minutes)
+
+These resources generate the highest costs and should be deleted **first and immediately**:
+
+=== Stop All Flink Applications and Compute Pools
+
+[source,bash]
+----
+# 1. List and stop all running Flink statements/applications
+confluent flink statement list
+
+# Stop each running statement (replace STATEMENT_ID with actual IDs)
+confluent flink statement stop $FLINK_STATEMENT_ID
+
+# Delete all Flink statements
+confluent flink statement delete $FLINK_STATEMENT_ID
+
+# 2. Stop and delete Flink compute pools
+confluent flink compute-pool list
+
+# Delete the compute pool
+confluent flink compute-pool delete --force $FLINK_POOL_ID
+----
+
+[WARNING]
+====
+**Flink compute pools charge by CFU-hours even when idle**. Deleting them immediately stops all charges.
+====
+
+=== Delete Tableflow Resources
+
+[source,bash]
+----
+# Load environment variables
+cd ./scripts/kafka
+source .env
+
+# 1. Disable Tableflow for all workshop topics
+confluent tableflow topic disable crypto-prices --force --cluster $CC_KAFKA_CLUSTER
+confluent tableflow topic disable price-alerts --force --cluster $CC_KAFKA_CLUSTER
+confluent tableflow topic disable crypto-trends --force --cluster $CC_KAFKA_CLUSTER
+confluent tableflow topic disable crypto-prices-exploded --force --cluster $CC_KAFKA_CLUSTER
+
+# 2. List and verify Tableflow topics are disabled
+confluent tableflow topic list --cluster $CC_KAFKA_CLUSTER
+
+# 3. Delete Tableflow API keys if created
+confluent api-key list
+confluent api-key delete --force $TABLEFLOW_API_KEY
+----
+
+[WARNING]
+====
+**Tableflow catalog integrations incur storage and compute costs**. Delete them immediately after stopping materialization.
+====
+
+=== Verify High-Priority Resources Deleted
+
+[source,bash]
+----
+# Verify Flink resources are gone
+confluent flink compute-pool list
+confluent flink statement list
+
+# Verify Tableflow resources are gone
+confluent tableflow topic list
+
+# Expected output: Empty lists or "No resources found"
+----
+
+== 🧹 Standard Resource Cleanup (5 minutes)
+
+After stopping the high-cost resources, clean up remaining components:
+
+=== Delete Connectors
+
+[source,bash]
+----
+# Load environment variables
+cd ./scripts/kafka
+source .env
+
+# List all connectors
+confluent connect cluster list
+confluent connect connector list --cluster $CC_KAFKA_CLUSTER
+
+# Delete the HTTP source connector
+confluent connect cluster delete $CC_CONNECT_CLUSTER --cluster $CC_KAFKA_CLUSTER
+
+# Verify deletion
+confluent connect cluster list --cluster $CC_KAFKA_CLUSTER
+----
+
+=== Clean Up API Keys
+
+[source,bash]
+----
+# List all API keys in the environment
+confluent api-key list
+
+# Delete workshop-related API keys (keep only what you need)
+confluent api-key delete $KAFKA_API_KEY
+confluent api-key delete $SCHEMA_REGISTRY_API_KEY
+
+# Verify remaining keys
+confluent api-key list
+----
+
+=== Delete Kafka Topics (Optional)
+
+[CAUTION]
+====
+[source,bash]
+----
+# Load environment variables
+cd ./scripts/kafka
+source .env
+
+# Delete all workshop topics
+confluent kafka topic delete crypto-prices --cluster $CC_KAFKA_CLUSTER
+confluent kafka topic delete price-alerts --cluster $CC_KAFKA_CLUSTER
+confluent kafka topic delete crypto-prices-exploded --cluster $CC_KAFKA_CLUSTER
+confluent kafka topic delete crypto-trends --cluster $CC_KAFKA_CLUSTER
+
+# Verify deletion
+confluent kafka topic list --cluster $CC_KAFKA_CLUSTER
+----
+
+=== Delete Kafka Cluster (Optional)
+
+[NOTE]
+====
+**Basic clusters are free**, but you may want to delete for organization. **Standard/Dedicated clusters incur charges**.
+====
+
+[source,bash]
+----
+# Check cluster type first
+confluent kafka cluster describe $CC_KAFKA_CLUSTER
+
+# If it's a Standard or Dedicated cluster, delete immediately:
+confluent kafka cluster delete $CC_KAFKA_CLUSTER
+
+# For Basic clusters (optional cleanup):
+confluent kafka cluster delete $CC_KAFKA_CLUSTER
+----
+
+== 🗂️ Environment Cleanup (Optional)
+
+=== Delete Workshop Environment
+
+[CAUTION]
+====
+**Environment Deletion**: This removes the entire environment and all contained resources. Only do this if you created a dedicated workshop environment.
+====
+
+[source,bash]
+----
+# List environments
+confluent environment list
+
+# Switch to a different environment first
+confluent environment use <OTHER_ENV_ID>
+
+# Delete the workshop environment
+confluent environment delete $CC_ENV_ID
+
+# Verify deletion
+confluent environment list
+----
+
+== ✅ Final Verification and Cost Monitoring (2 minutes)
+
+=== Verify All Resources Deleted
+
+[TIP]
+====
+**Quick Validation**: Use the automated validation script for comprehensive resource checking:
+[source,bash]
+----
+# Run the automated validation script
+./scripts/validate-teardown.sh
+----
+This script provides colored output, detailed resource analysis, and cost impact assessment.
+====
+
+**Manual Verification** (if needed):
+
+[source,bash]
+----
+# Check for any remaining billable resources
+echo "🔍 Checking for remaining billable resources..."
+
+# Flink resources (should be empty)
+echo "Flink Compute Pools:"
+confluent flink compute-pool list
+
+echo "Flink Statements:"
+confluent flink statement list
+
+# Tableflow resources (should be empty)
+echo "Tableflow Catalog Integrations:"
+confluent tableflow catalog-integration list
+
+echo "Tableflow Topics:"
+confluent tableflow topic list
+
+# Connectors (should be empty or only non-workshop connectors)
+echo "Connectors:"
+confluent connect connector list
+
+# Clusters (Basic clusters are free, but check for Standard/Dedicated)
+echo "Kafka Clusters:"
+confluent kafka cluster list
+----
+
+=== Monitor Billing Dashboard
+
+[source,bash]
+----
+# Open Confluent Cloud Console to verify billing
+echo "🌐 Please verify in Confluent Cloud Console:"
+echo "1. Go to: https://confluent.cloud"
+echo "2. Navigate to: Billing & Payment → Usage"
+echo "3. Verify: No active Flink or Tableflow charges"
+echo "4. Check: Only Basic cluster (free) or expected resources remain"
+----
+
+== 💰 Cost Prevention Best Practices
+
+=== Immediate Actions After Workshop
+
+1. **Set up billing alerts** in Confluent Cloud Console
+2. **Review usage daily** for the first week after workshop
+3. **Delete unused environments** regularly
+4. **Monitor API key usage** and delete unused keys
+
+=== Ongoing Cost Management
+
+[TIP]
+====
+**Use the validation script regularly** to monitor your Confluent Cloud resources:
+[source,bash]
+----
+# Run weekly cost checks
+./scripts/validate-teardown.sh
+----
+====
+
+== 🚨 Emergency Cleanup Script
+
+If you need to quickly delete everything:
+
+[source,bash]
+----
+# Emergency cleanup script - USE WITH CAUTION
+cat > ~/emergency-cleanup.sh << 'EOF'
+#!/bin/bash
+
+echo "🚨 EMERGENCY CONFLUENT CLOUD CLEANUP"
+echo "This will delete ALL workshop resources!"
+read -p "Are you sure? Type 'DELETE' to continue: " confirm
+
+if [ "$confirm" != "DELETE" ]; then
+    echo "Cleanup cancelled."
+    exit 1
+fi
+
+echo "🧹 Starting emergency cleanup..."
+
+# Stop and delete all Flink resources
+echo "Cleaning Flink resources..."
+for statement in $(confluent flink statement list --output json | jq -r '.[].name' 2>/dev/null); do
+    confluent flink statement delete "$statement" --force
+done
+
+for pool in $(confluent flink compute-pool list --output json | jq -r '.[].id' 2>/dev/null); do
+    confluent flink compute-pool delete "$pool" --force
+done
+
+# Delete all Tableflow resources
+echo "Cleaning Tableflow resources..."
+for topic in $(confluent tableflow topic list --output json | jq -r '.[].name' 2>/dev/null); do
+    confluent tableflow topic delete "$topic" --force
+done
+
+for catalog in $(confluent tableflow catalog-integration list --output json | jq -r '.[].id' 2>/dev/null); do
+    confluent tableflow catalog-integration delete "$catalog" --force
+done
+
+# Delete connectors
+echo "Cleaning connectors..."
+for connector in $(confluent connect connector list --output json | jq -r '.[].name' 2>/dev/null); do
+    confluent connect connector delete "$connector"
+done
+
+echo "✅ Emergency cleanup completed!"
+echo "🌐 Please verify in Confluent Cloud Console that all resources are deleted."
+EOF
+
+chmod +x ~/emergency-cleanup.sh
+----
+
+== 📋 Teardown Checklist
+
+Before considering the teardown complete, verify:
+
+**High-Priority (Cost-Critical)**:
+- [ ] All Flink compute pools deleted
+- [ ] All Flink applications/statements stopped and deleted
+- [ ] All Tableflow catalog integrations deleted
+- [ ] All Tableflow materialized tables deleted
+
+**Standard Cleanup**:
+- [ ] HTTP Source Connectors deleted
+- [ ] Workshop API keys deleted
+- [ ] Workshop topics deleted (if desired)
+- [ ] Kafka cluster deleted (if Standard/Dedicated tier)
+
+**Verification**:
+- [ ] Billing dashboard shows no unexpected charges
+- [ ] Cost monitoring script runs clean
+- [ ] All workshop resources confirmed deleted
+
+== 🔧 Troubleshooting Teardown Issues
+
+=== Cannot Delete Flink Compute Pool
+
+[source,bash]
+----
+# Force stop all applications first
+confluent flink statement list
+confluent flink statement stop <STATEMENT_ID> --force
+
+# Wait a few minutes, then try deleting the pool
+confluent flink compute-pool delete <POOL_ID> --force
+----
+
+=== Cannot Delete Tableflow Catalog Integration
+
+[source,bash]
+----
+# Delete all materialized tables first
+confluent tableflow topic list
+confluent tableflow topic delete <TABLE_NAME> --force
+
+# Delete API keys
+confluent tableflow api-key list
+confluent tableflow api-key delete <API_KEY>
+
+# Then delete catalog integration
+confluent tableflow catalog-integration delete <CATALOG_ID> --force
+----
+
+=== Connector Deletion Fails
+
+[source,bash]
+----
+# Check connector status
+confluent connect connector describe <CONNECTOR_NAME>
+
+# Force delete if stuck
+confluent connect connector delete <CONNECTOR_NAME> --force
+
+# If still failing, contact support with connector ID
+----
+
+=== Unexpected Charges Appearing
+
+1. **Immediately run the emergency cleanup script**
+2. **Check Confluent Cloud Console billing section**
+3. **Contact Confluent Support** with your organization ID
+4. **Document all resources** you believe should be deleted
+
+== 📞 Support and Resources
+
+=== Getting Help
+
+* **Confluent Cloud Console**: https://confluent.cloud/settings/billing
+* **Confluent Support**: https://support.confluent.io
+* **Community Slack**: https://confluentcommunity.slack.com
+
+=== Cost Estimation Resources
+
+* **Confluent Cloud Pricing**: https://www.confluent.io/confluent-cloud/pricing/
+* **Flink Pricing Calculator**: Available in Confluent Cloud Console
+* **Tableflow Pricing**: Based on storage and compute usage
+
+== 📚 Additional Resources
+
+* https://docs.confluent.io/cloud/current/billing/overview.html[Confluent Cloud Billing Overview]
+* https://docs.confluent.io/confluent-cli/current/command-reference/[Confluent CLI Reference]
+* https://docs.confluent.io/cloud/current/flink/[Flink for Confluent Cloud]
+* https://docs.confluent.io/cloud/current/tableflow/[Tableflow Documentation]
+
+---
+
+[IMPORTANT]
+====
+🎉 **Workshop Complete!** 
+
+You have successfully completed the Confluent Cloud workshop and properly cleaned up all resources. 
+
+**Remember**: Always run this teardown process after any Confluent Cloud experimentation to prevent unexpected charges.
+====
+
