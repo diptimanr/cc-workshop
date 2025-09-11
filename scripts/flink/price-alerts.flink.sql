@@ -1,6 +1,7 @@
 -- Create price alerts using exploded cryptocurrency data
---insert into`price-alerts`
-create table price-alerts as(
+
+-- insert into `price-alerts`
+create table `price-alerts` as (
 SELECT 
   coin_id as cryptocurrency,
   usd as current_price,

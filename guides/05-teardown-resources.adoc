@@ -135,10 +135,10 @@ source .env
 
 # List all connectors
 confluent connect cluster list
-confluent connect connector list --cluster $CC_KAFKA_CLUSTER
+confluent connect cluster list --cluster $CC_KAFKA_CLUSTER
 
 # Delete the HTTP source connector
-confluent connect cluster delete $CC_CONNECT_CLUSTER --cluster $CC_KAFKA_CLUSTER
+confluent connect cluster delete --cluster $CC_CONNECT_CLUSTER
 
 # Verify deletion
 confluent connect cluster list --cluster $CC_KAFKA_CLUSTER
@@ -174,6 +174,7 @@ confluent kafka topic delete crypto-prices --cluster $CC_KAFKA_CLUSTER
 confluent kafka topic delete price-alerts --cluster $CC_KAFKA_CLUSTER
 confluent kafka topic delete crypto-prices-exploded --cluster $CC_KAFKA_CLUSTER
 confluent kafka topic delete crypto-trends --cluster $CC_KAFKA_CLUSTER
+confluent kafka topic delete latest-prices --cluster $CC_KAFKA_CLUSTER
 
 # Verify deletion
 confluent kafka topic list --cluster $CC_KAFKA_CLUSTER
@@ -212,7 +213,7 @@ confluent kafka cluster delete $CC_KAFKA_CLUSTER
 # List environments
 confluent environment list
 
-# Switch to a different environment first
+# Switch to a different environment first (use your default environment)
 confluent environment use <OTHER_ENV_ID>
 
 # Delete the workshop environment
@@ -232,7 +233,7 @@ confluent environment list
 [source,bash]
 ----
 # Run the automated validation script
-./scripts/validate-teardown.sh
+./scripts/setup/validate-teardown.sh
 ----
 This script provides colored output, detailed resource analysis, and cost impact assessment.
 ====

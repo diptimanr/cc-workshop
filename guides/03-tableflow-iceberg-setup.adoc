@@ -49,22 +49,21 @@ By the end of this section, you will have:
 [source,bash]
 ----
 # Load environment variables
-cd scripts/kafka
+cd ./scripts/kafka
 source .env
 
 # Enable Tableflow for the crypto-prices topic
-# Replace <CLUSTER_ID> with your actual Kafka cluster ID (lkc-XXXXXX)
 confluent tableflow topic enable crypto-prices \
-  --cluster <CLUSTER_ID> \
+  --cluster $CC_KAFKA_CLUSTER \
   --storage-type MANAGED \
   --table-formats ICEBERG \
   --retention-ms 604800000
 
 # Monitor materialization progress
-confluent tableflow topic describe crypto-prices --cluster <CLUSTER_ID>
+confluent tableflow topic describe crypto-prices --cluster $CC_KAFKA_CLUSTER
 
 # Wait for initial data to be materialized (2-3 minutes)
-confluent tableflow topic list --cluster <CLUSTER_ID>
+confluent tableflow topic list --cluster $CC_KAFKA_CLUSTER
 ----
 
 === Verify Table Creation
@@ -72,10 +71,10 @@ confluent tableflow topic list --cluster <CLUSTER_ID>
 [source,bash]
 ----
 # List all Tableflow-enabled topics
-confluent tableflow topic list --cluster <CLUSTER_ID>
+confluent tableflow topic list --cluster $CC_KAFKA_CLUSTER
 
 # Check table schema and sample data
-confluent tableflow topic describe crypto-prices --cluster <CLUSTER_ID>
+confluent tableflow topic describe crypto-prices --cluster $CC_KAFKA_CLUSTER
 ----
 
 == 🦆 DuckDB Integration Setup (10 minutes)
@@ -88,7 +87,7 @@ confluent tableflow topic describe crypto-prices --cluster <CLUSTER_ID>
 duckdb --ui workshop_analytics.db
 
 # This will start DuckDB and open the web interface
-# Navigate to http://localhost:8080 in your browser
+# Navigate to http://localhost:4213/ in your browser
 ----
 
 === Configure DuckDB for Iceberg Access
@@ -123,7 +122,7 @@ TIP: You can find your Tableflow API key credentials and endpoint details by run
 [source,bash]
 ----
 # Load your environment variables
-cd ../../scripts/kafka
+cd ./scripts/kafka
 source .env
 
 # Display the values you need for DuckDB configuration
@@ -140,10 +139,10 @@ echo "ENV_ID: $CC_ENV_ID"
 [source,sql]
 ----
 -- First, examine the table structure to understand available columns
-DESCRIBE iceberg_catalog."lkc-XXXXXX"."crypto-prices";
+DESCRIBE iceberg_catalog."$CC_KAFKA_CLUSTER"."crypto-prices";
 
 -- Query the crypto-prices data via DuckDB
-SELECT * FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices" LIMIT 10;
+SELECT * FROM iceberg_catalog."$CC_KAFKA_CLUSTER"."crypto-prices" LIMIT 10;
 
 -- View recent Bitcoin prices with timestamps
 -- Use the actual column names from the table schema
@@ -151,7 +150,7 @@ SELECT
     bitcoin.usd as btc_price,
     ethereum.usd as eth_price,
     to_timestamp(bitcoin.last_updated_at) as timestamp
-FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices"
+FROM iceberg_catalog."$CC_KAFKA_CLUSTER"."crypto-prices"
 ORDER BY timestamp DESC 
 LIMIT 20;
 ----
@@ -168,7 +167,7 @@ SELECT
     MAX(bitcoin.usd) as max_price,
     STDDEV(bitcoin.usd) as price_volatility,
     COUNT(*) as data_points
-FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices"
+FROM iceberg_catalog."$CC_KAFKA_CLUSTER"."crypto-prices"
 WHERE to_timestamp(bitcoin.last_updated_at) >= NOW() - INTERVAL 1 HOUR;
 
 -- Compare cryptocurrency performance
@@ -177,7 +176,7 @@ WITH bitcoin_latest AS (
         'Bitcoin' as crypto,
         bitcoin.usd as current_price,
         bitcoin.usd_24h_change as change_24h
-    FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices"
+    FROM iceberg_catalog."$CC_KAFKA_CLUSTER"."crypto-prices"
     ORDER BY bitcoin.last_updated_at DESC
     LIMIT 1
 ),
@@ -186,7 +185,7 @@ ethereum_latest AS (
         'Ethereum' as crypto,
         ethereum.usd as current_price,
         ethereum.usd_24h_change as change_24h
-    FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices"
+    FROM iceberg_catalog."$CC_KAFKA_CLUSTER"."crypto-prices"
     ORDER BY ethereum.last_updated_at DESC
     LIMIT 1
 )
@@ -206,7 +205,7 @@ SELECT
     MIN(bitcoin.usd) as min_btc_price,
     MAX(bitcoin.usd) as max_btc_price,
     COUNT(*) as price_updates
-FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices"
+FROM iceberg_catalog."$CC_KAFKA_CLUSTER"."crypto-prices"
 WHERE to_timestamp(bitcoin.last_updated_at) >= NOW() - INTERVAL 6 HOURS
 GROUP BY DATE_TRUNC('hour', to_timestamp(bitcoin.last_updated_at))
 ORDER BY hour DESC;
@@ -266,7 +265,7 @@ CREATE SECRET iceberg_secret (
     TYPE ICEBERG,
     CLIENT_ID 'your-actual-api-key',
     CLIENT_SECRET 'your-actual-api-secret',
-    ENDPOINT 'https://tableflow.us-west-2.aws.confluent.cloud/iceberg/catalog/organizations/<UUID>/environments/<env-ID>',
+    ENDPOINT 'https://tableflow.us-east-1.aws.confluent.cloud/iceberg/catalog/organizations/$CC_ORG_ID/environments/$CC_ENV_ID',
     OAUTH2_SCOPE 'catalog'
 );
 ----
@@ -274,12 +273,8 @@ CREATE SECRET iceberg_secret (
 **Table not found errors**::
 [source,sql]
 ----
--- Verify schema and table names
-SHOW SCHEMAS FROM iceberg_catalog;
-SHOW TABLES FROM iceberg_catalog."lkc-XXXXXX";
-
 -- Check if table name matches exactly (topic name with hyphens)
-SELECT * FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices" LIMIT 1;
+SELECT * FROM iceberg_catalog."$CC_KAFKA_CLUSTER"."crypto-prices" LIMIT 1;
 ----
 
 == 📚 Additional Resources
@@ -290,4 +285,4 @@ SELECT * FROM iceberg_catalog."lkc-XXXXXX"."crypto-prices" LIMIT 1;
 
 ---
 
-**Next**: Proceed to `04-flink-hands-on.adoc` for stream processing that will create additional tables exposed via Tableflow.
+**Next**: Proceed to link:04-flink-hands-on.adoc[] for stream processing that will create additional tables exposed via Tableflow.

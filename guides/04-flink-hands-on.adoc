@@ -63,6 +63,7 @@ confluent flink compute-pool create workshop-pool \
 confluent flink compute-pool list
 
 # Use the compute pool (replace POOL_ID with actual ID)
+# export FLINK_POOL_ID=<your-pool-id>
 confluent flink compute-pool use $FLINK_POOL_ID
 ----
 
@@ -103,7 +104,8 @@ SHOW CREATE TABLE `crypto-prices`;
 
 === Create Exploded Cryptocurrency Table
 
-The first step in our stream processing pipeline is to transform the nested cryptocurrency data from the CoinGecko API into individual records for each coin. This "explosion" operation makes the data easier to work with in subsequent analytics.
+The first step in our stream processing pipeline is to transform the nested cryptocurrency data from the CoinGecko API into individual records for each coin. 
+This "explosion" operation makes the data easier to work with in subsequent analytics.
 
 [source,sql]
 ----
@@ -286,7 +288,7 @@ Return to your DuckDB session (or start a new one with `duckdb --ui workshop_ana
 [source,sql]
 ----
 -- Query price alerts created by Flink
-SELECT * FROM iceberg_catalog."lkc-XXXXXX"."price-alerts" 
+SELECT * FROM iceberg_catalog."$CC_KAFKA_CLUSTER"."price-alerts" 
 ORDER BY alert_time DESC 
 LIMIT 10;
 
@@ -298,7 +300,7 @@ SELECT
     AVG(price_change) as avg_change,
     MIN(alert_time) as first_alert,
     MAX(alert_time) as latest_alert
-FROM iceberg_catalog."lkc-XXXXXX"."price-alerts"
+FROM iceberg_catalog."$CC_KAFKA_CLUSTER"."price-alerts"
 WHERE alert_time >= NOW() - INTERVAL 2 HOURS
 GROUP BY cryptocurrency, alert_type
 ORDER BY alert_count DESC;
@@ -433,4 +435,4 @@ DESCRIBE crypto_prices;
 
 ---
 
-**Next**: Proceed to `05-advanced-analytics.adoc` for advanced analytics and workshop completion.
+**Next**: Proceed to link:05-teardown-resources.adoc[] for workshop completion and resource cleanup.

@@ -102,16 +102,16 @@ First, configure your API credentials:
 [source,bash]
 ----
 # Navigate to the scripts directory
-cd scripts/kafka
+cd ./scripts/kafka
 
 # Copy the example environment file and configure your API keys
 cp .env.example .env
 
 # Edit .env file with your actual API keys:
-# export KAFKA_API_KEY="your-kafka-key"
-# export KAFKA_API_SECRET="your-kafka-secret"
-# export SCHEMA_REGISTRY_API_KEY="your-schema-registry-key"
-# export SCHEMA_REGISTRY_API_SECRET="your-schema-registry-secret"
+# export KAFKA_API_KEY="your-kafka-api-key"
+# export KAFKA_API_SECRET="your-kafka-api-secret"
+# export SCHEMA_REGISTRY_API_KEY="your-schema-registry-api-key"
+# export SCHEMA_REGISTRY_API_SECRET="your-schema-registry-api-secret"
 
 # Load environment variables
 source .env
@@ -258,4 +258,4 @@ source .env && echo "KAFKA_API_KEY: $KAFKA_API_KEY"
 
 ---
 
-**Next**: Proceed to `03-tableflow-iceberg-setup.adoc` for Tableflow materialization and DuckDB integration.
+**Next**: Proceed to link:03-tableflow-iceberg-setup.adoc[] for Tableflow materialization and DuckDB integration.

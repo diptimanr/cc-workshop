@@ -110,9 +110,6 @@ confluent login --save
 ----
 # List available organizations
 confluent organization list
-
-# If you need to create an organization (usually not needed for workshop)
-# confluent organization create "Workshop Org"
 ----
 
 === Create Workshop Environment
@@ -125,8 +122,9 @@ confluent environment create "cc-workshop-env"
 # List environments to see your new environment
 confluent environment list
 
-# Use the workshop environment (replace ENV_ID with actual ID)
-confluent environment use <ENV_ID>
+# Use the workshop environment (replace $CC_ENV_ID with actual ID)
+# export CC_ENV_ID=<your-env-id>
+confluent environment use $CC_ENV_ID
 ----
 
 == ☁️ Kafka Cluster Creation (5 minutes)
@@ -140,10 +138,10 @@ confluent kafka cluster create workshop-cluster \
   --cloud aws \
   --region us-east-1 \
   --type basic
-
-# Note: Basic clusters are free and perfect for workshops
-# They have some limitations but are sufficient for our use case
 ----
+
+NOTE: Basic clusters are free and perfect for workshops.
+They have some limitations but are sufficient for our use case
 
 === Configure Cluster Settings
 
@@ -153,10 +151,11 @@ confluent kafka cluster create workshop-cluster \
 confluent kafka cluster list
 
 # Use the cluster (replace CLUSTER_ID with actual ID)
-confluent kafka cluster use <CLUSTER_ID>
+# export CC_KAFKA_CLUSTER=<your-cluster-id>
+confluent kafka cluster use $CC_KAFKA_CLUSTER
 
 # Describe cluster to verify settings
-confluent kafka cluster describe <CLUSTER_ID>
+confluent kafka cluster describe $CC_KAFKA_CLUSTER
 ----
 
 === Generate API Keys
@@ -166,14 +165,16 @@ confluent kafka cluster describe <CLUSTER_ID>
 [source,bash]
 ----
 # Create API key for cluster access
-confluent api-key create --resource <CLUSTER_ID> --description "Workshop API Key for Kafka Cluster"
+confluent api-key create --resource $CC_KAFKA_CLUSTER --description "Workshop API Key for Kafka Cluster"
 
 # Store the API key and secret - you'll need them later
 # API Key: <your-kafka-api-key>
 # API Secret: <your-kafka-api-secret>
 
 # Use the API key
-confluent api-key use <your-kafka-api-key> --resource <CLUSTER_ID>
+# export KAFKA_API_KEY=<your-kafka-api-key>
+# export KAFKA_API_SECRET=<your-kafka-api-secret>
+confluent api-key use $KAFKA_API_KEY --resource $CC_KAFKA_CLUSTER
 ----
 
 ==== Schema Registry API Keys
@@ -184,14 +185,16 @@ confluent api-key use <your-kafka-api-key> --resource <CLUSTER_ID>
 confluent schema-registry cluster describe
 
 # Create API key for Schema Registry access
-confluent api-key create --resource <SCHEMA_REGISTRY_CLUSTER_ID> --description "Workshop API Key for Schema Registry"
+# export SCHEMA_REGISTRY_CLUSTER_ID=<your-sr-cluster-id>
+confluent api-key create --resource $SCHEMA_REGISTRY_CLUSTER_ID --description "Workshop API Key for Schema Registry"
 
 # Store the Schema Registry API key and secret
 # Schema Registry API Key: <your-sr-api-key>
 # Schema Registry API Secret: <your-sr-api-secret>
 
 # Use the Schema Registry API key
-confluent api-key use <your-sr-api-key> --resource <SCHEMA_REGISTRY_CLUSTER_ID>
+# export SCHEMA_REGISTRY_API_KEY=<your-sr-api-key>
+# export SCHEMA_REGISTRY_API_SECRET=<your-sr-api-secret>
 ----
 
 ==== Tableflow API Keys
@@ -206,7 +209,8 @@ confluent api-key create --resource tableflow --description "Workshop API Key fo
 # Tableflow API Secret: <your-tableflow-api-secret>
 
 # Use the Tableflow API key
-confluent api-key use <your-tableflow-api-key> --resource tableflow
+# export TABLEFLOW_API_KEY=<your-tableflow-api-key>
+# export TABLEFLOW_API_SECRET=<your-tableflow-api-secret>
 
 # Test Tableflow access by listing topics (should be empty initially)
 confluent tableflow topic list
@@ -217,18 +221,18 @@ confluent tableflow topic list
 [source,bash]
 ----
 # Navigate to the scripts directory
-cd scripts/kafka
+cd ./scripts/kafka
 
 # Copy the example environment file
 cp .env.example .env
 
 # Edit the .env file with your actual API keys:
-# export KAFKA_API_KEY="<your-kafka-api-key>"
-# export KAFKA_API_SECRET="<your-kafka-api-secret>"
-# export SCHEMA_REGISTRY_API_KEY="<your-sr-api-key>"
-# export SCHEMA_REGISTRY_API_SECRET="<your-sr-api-secret>"
-# export TABLEFLOW_API_KEY="<your-tableflow-api-key>"
-# export TABLEFLOW_API_SECRET="<your-tableflow-api-secret>"
+# export KAFKA_API_KEY="your-kafka-api-key"
+# export KAFKA_API_SECRET="your-kafka-api-secret"
+# export SCHEMA_REGISTRY_API_KEY="your-sr-api-key"
+# export SCHEMA_REGISTRY_API_SECRET="your-sr-api-secret"
+# export TABLEFLOW_API_KEY="your-tableflow-api-key"
+# export TABLEFLOW_API_SECRET="your-tableflow-api-secret"
 
 # Load the environment variables
 source .env
@@ -287,7 +291,7 @@ Check your account limits:
 [source,bash]
 ----
 # Check service quotas
-confluent service-quota list
+confluent service-quota list organization
 ----
 
 **API Key Issues**::
@@ -308,4 +312,4 @@ confluent api-key delete <key-id>
 
 ---
 
-**Next**: Proceed to `02-kafka-hands-on.adoc` for Kafka topic management and HTTP connector setup.
+**Next**: Proceed to link:02-kafka-hands-on.adoc[] for Kafka topic management and HTTP connector setup.
