@@ -68,6 +68,7 @@ The workshop assumes basic familiarity with programming and provides step-by-ste
 💻 **Windows Users**: We recommend using GitHub Codespaces or VS Code Dev Containers for the best experience. The devcontainer configuration provides a consistent Linux environment with all tools pre-installed.
 
 🚀 **Quick Start Options**:
+
 * **GitHub Codespaces** (Recommended for Windows): Click "Code" → "Codespaces" → "Create codespace"
 * **Dev Containers**: Open in VS Code → Ctrl+Shift+P → "Dev Containers: Reopen in Container"
 * **Local Setup**: Linux/macOS users can run scripts directly
