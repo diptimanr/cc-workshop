@@ -29,7 +29,7 @@ This guide demonstrates enabling Tableflow for the crypto-prices topic to immedi
 The following diagram illustrates the Tableflow materialization pipeline that we'll implement in this section:
 
 .Tableflow Data Flow
-image::../images/03-tableflow.png[Tableflow Data Flow,800,600,align="center"]
+image::../images/03-tableflow.png[Tableflow Data Flow,800,align="center"]
 
 This section focuses on data materialization: 
 
