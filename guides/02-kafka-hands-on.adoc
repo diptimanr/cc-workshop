@@ -24,6 +24,15 @@ Viktor Gamov <vgamov@confluent.io>, © 2025 Confluent, Inc.
 
 This guide demonstrates Kafka topic management and real-time data streaming using cryptocurrency price data from CoinGecko API.
 
+== 🔄 Data Flow Overview
+
+The following diagram illustrates the complete data flow from external API to Kafka topics that we'll implement in this section:
+
+.Connector to Topic Data Flow
+image::../images/01-connector-to-topic.png[Connector to Topic Flow,800,600,align="center"]
+
+This section focuses on establishing the foundational data pipeline: **CoinGecko API → HTTP Source Connector → Schema Registry → Kafka Topics**. You'll learn how external data sources can be seamlessly integrated into Kafka through managed connectors with proper schema validation.
+
 toc::[]
 
 == 🎯 Learning Objectives
