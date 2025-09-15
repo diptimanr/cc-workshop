@@ -161,8 +161,6 @@ confluent api-key list
 
 === Delete Kafka Topics (Optional)
 
-[CAUTION]
-====
 [source,bash]
 ----
 # Load environment variables
@@ -360,18 +358,21 @@ chmod +x ~/emergency-cleanup.sh
 Before considering the teardown complete, verify:
 
 **High-Priority (Cost-Critical)**:
+
 - [ ] All Flink compute pools deleted
 - [ ] All Flink applications/statements stopped and deleted
 - [ ] All Tableflow catalog integrations deleted
 - [ ] All Tableflow materialized tables deleted
 
 **Standard Cleanup**:
+
 - [ ] HTTP Source Connectors deleted
 - [ ] Workshop API keys deleted
 - [ ] Workshop topics deleted (if desired)
 - [ ] Kafka cluster deleted (if Standard/Dedicated tier)
 
 **Verification**:
+
 - [ ] Billing dashboard shows no unexpected charges
 - [ ] Cost monitoring script runs clean
 - [ ] All workshop resources confirmed deleted

@@ -1,5 +1,5 @@
 .devcontainer/cache
 .history
-scripts/kafka/.env
+.env
 *.db
 _bak

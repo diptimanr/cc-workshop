@@ -24,6 +24,19 @@ Viktor Gamov <vgamov@confluent.io>, © 2025 Confluent, Inc.
 
 This guide demonstrates real-time stream processing using Apache Flink to create derived tables that will be automatically exposed via Tableflow for analytics.
 
+== 🌊 Stream Processing Data Flow
+
+The following diagram illustrates the complete stream processing pipeline that we'll implement in this section:
+
+.Stream Processing with Flink
+image::../images/01-stream-processing-with-flink.png[Stream Processing Flow,800,600,align="center"]
+
+This section focuses on advanced data transformation: 
+
+**Kafka Topics → Flink SQL Processing → Multiple Output Topics → Tableflow Materialization**. 
+
+You'll learn how to implement real-time analytics, data explosion, alerting, and trend analysis using Flink SQL.
+
 toc::[]
 
 == 🎯 Learning Objectives

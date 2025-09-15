@@ -1,0 +1,186 @@
+= 📚 Confluent Cloud Workshop - Complete Guide
+Viktor Gamov <vgamov@confluent.io>, © 2025 Confluent, Inc.
+2025-09-11
+:revdate: 2025-09-11
+:linkattrs:
+:ast: &ast;
+:y: &#10003;
+:n: &#10008;
+:y: icon:check-sign[role="green"]
+:n: icon:check-minus[role="red"]
+:c: icon:file-text-alt[role="blue"]
+:toc: auto
+:toc-placement: auto
+:toc-position: auto
+:toc-title: Complete Workshop Guide
+:toclevels: 4
+:idprefix:
+:idseparator: -
+:sectanchors:
+:icons: font
+:source-highlighter: highlight.js
+:highlightjs-theme: idea
+:experimental:
+:leveloffset: +1
+
+[.lead]
+**Complete hands-on workshop for building real-time data pipelines with Apache Kafka, Apache Flink, and Tableflow on Confluent Cloud**
+
+This comprehensive guide combines all workshop sections into a single document for easy navigation and reference. Follow the sections sequentially to build a complete cryptocurrency analytics pipeline from data ingestion to real-time insights.
+
+== 🎯 Workshop Overview
+
+=== **Total Duration**: 2 hours 15 minutes
+=== **Difficulty**: Beginner to Advanced
+=== **Technologies**: Apache Kafka, Apache Flink, Tableflow, DuckDB, AVRO
+
+=== Learning Path
+
+1. **Foundation**: Confluent Cloud setup and authentication
+2. **Data Ingestion**: Kafka topics and HTTP connectors  
+3. **Data Materialization**: Tableflow and DuckDB integration
+4. **Stream Processing**: Apache Flink for real-time analytics
+5. **Resource Management**: Proper cleanup to prevent charges
+
+=== Prerequisites
+- Basic understanding of streaming concepts
+- Familiarity with SQL queries
+- VSCode with Confluent extension installed
+- Confluent Cloud account with appropriate permissions
+
+== 🚨 Important Cost Warning
+
+[IMPORTANT]
+====
+This workshop creates billable resources in Confluent Cloud:
+- **Flink Compute Pools** (5-10 CFUs) - Primary cost driver
+- **Tableflow Storage** - Data materialization costs
+- **Standard/Dedicated Clusters** (if used instead of Basic)
+
+**CRITICAL**: Complete Section 5 (Teardown) immediately after the workshop to prevent unexpected charges.
+====
+
+// Include Section 1: Setup
+include::01-setup-confluent-cloud.adoc[lines=25..-1,leveloffset=+1]
+
+// Include Section 2: Kafka Hands-On
+include::02-kafka-hands-on.adoc[lines=25..-1,leveloffset=+1]
+
+// Include Section 3: Tableflow & Iceberg Setup
+include::03-tableflow-iceberg-setup.adoc[lines=25..-1,leveloffset=+1]
+
+// Include Section 4: Flink Stream Processing
+include::04-flink-hands-on.adoc[lines=25..-1,leveloffset=+1]
+
+// Include Section 5: Teardown Resources
+include::05-teardown-resources.adoc[lines=25..-1,leveloffset=+1]
+
+== 🎓 Workshop Completion
+
+[.text-center]
+**🎉 Congratulations!** You have successfully completed the Confluent Cloud Workshop.
+
+=== What You've Accomplished
+
+* ✅ **Infrastructure Mastery**: Set up complete Confluent Cloud environment
+* ✅ **Data Pipeline Creation**: Built end-to-end streaming data pipeline
+* ✅ **Real-time Processing**: Implemented Flink stream processing applications
+* ✅ **Analytics Integration**: Connected streaming data to analytical databases
+* ✅ **Cost Management**: Learned proper resource lifecycle management
+
+=== Key Deliverables Created
+
+1. **Live Data Pipeline**: CoinGecko API → Kafka → Flink → Tableflow → DuckDB
+2. **Stream Processing Applications**: Data explosion, price alerts, trend analysis
+3. **Analytical Capabilities**: Real-time cryptocurrency market insights
+4. **Operational Knowledge**: Resource management and cost optimization
+
+=== Architecture Achieved
+
+```
+CoinGecko API → HTTP Connector → Kafka Topics → Flink Processing → Tableflow → DuckDB Analytics
+                                      ↓
+                              Tableflow Materialization → Iceberg Tables
+```
+
+== 🚀 Next Steps & Advanced Topics
+
+=== Immediate Actions
+1. **Verify Resource Cleanup**: Ensure all billable resources are deleted
+2. **Save Code Artifacts**: Preserve SQL scripts and configurations locally
+3. **Document Learnings**: Record key insights and patterns discovered
+
+=== Advanced Exploration Opportunities
+
+==== Stream Processing Patterns
+- **Complex Event Processing**: Multi-stream joins and pattern detection
+- **Stateful Stream Processing**: Maintaining application state across events
+- **Exactly-Once Processing**: Ensuring data consistency in distributed systems
+
+==== Data Architecture Patterns
+- **Lambda Architecture**: Combining batch and stream processing
+- **Kappa Architecture**: Stream-first data processing approach
+- **Event Sourcing**: Using events as the source of truth
+
+==== Production Considerations
+- **Schema Evolution**: Managing data format changes over time
+- **Multi-Environment Deployments**: Development, staging, production workflows
+- **Monitoring & Observability**: Comprehensive system health tracking
+- **Security & Governance**: RBAC, encryption, audit logging
+
+==== Integration Opportunities
+- **External Systems**: Connecting with databases, APIs, and services
+- **Machine Learning**: Real-time feature engineering and model serving
+- **Visualization**: Building dashboards and real-time monitoring systems
+
+== 📚 Additional Resources
+
+=== Documentation & References
+* https://docs.confluent.io/confluent-cli/current/install.html[Confluent CLI Installation Guide]
+* https://docs.confluent.io/cloud/current/get-started/index.html[Confluent Cloud Getting Started]
+* https://docs.confluent.io/cloud/current/flink/[Confluent Cloud for Apache Flink]
+* https://docs.confluent.io/cloud/current/tableflow/[Tableflow Documentation]
+* https://duckdb.org/docs/stable/core_extensions/iceberg/[DuckDB Iceberg Integration]
+
+=== Community & Support
+* **Confluent Community Slack**: https://confluentcommunity.slack.com
+* **Confluent Support Portal**: https://support.confluent.io
+* **Confluent Developer Portal**: https://developer.confluent.io
+* **Apache Kafka Documentation**: https://kafka.apache.org/documentation/
+* **Apache Flink Documentation**: https://flink.apache.org/
+
+=== Cost Management & Billing
+* **Billing Dashboard**: https://confluent.cloud/settings/billing
+* **Pricing Information**: https://www.confluent.io/confluent-cloud/pricing/
+* **Cost Optimization Best Practices**: Included in Section 5
+
+== 💡 Workshop Feedback & Improvement
+
+Your feedback helps improve this workshop for future participants:
+
+=== What Worked Well?
+
+- Which sections were most valuable for your learning?
+- What concepts became clearer through hands-on practice?
+- Which tools and integrations were most impressive?
+
+=== Areas for Enhancement
+
+- Which sections could benefit from more explanation?
+- What additional examples would be helpful?
+- Are there other use cases you'd like to see covered?
+
+=== Technical Suggestions
+
+- Performance optimizations discovered
+- Alternative implementation approaches
+- Integration patterns that could be explored
+
+---
+
+[.text-center]
+**Thank you for completing the Confluent Cloud Workshop!** 
+
+**Remember**: Always run proper teardown procedures after experimenting with cloud resources to prevent unexpected charges.
+
+**Happy Streaming!** 🌊

@@ -24,6 +24,19 @@ Viktor Gamov <vgamov@confluent.io>, © 2025 Confluent, Inc.
 
 This guide demonstrates enabling Tableflow for the crypto-prices topic to immediately configure access via Iceberg tables and connect DuckDB for analytics.
 
+== 🗄️ Tableflow Data Flow
+
+The following diagram illustrates the Tableflow materialization pipeline that we'll implement in this section:
+
+.Tableflow Data Flow
+image::../images/03-tableflow.png[Tableflow Data Flow,800,600,align="center"]
+
+This section focuses on data materialization: 
+
+**Kafka Topics → Tableflow Materialization → Iceberg Tables → DuckDB Analytics**. 
+
+You'll learn how to enable real-time table materialization and connect analytical tools for immediate insights.
+
 toc::[]
 
 == 🎯 Learning Objectives
