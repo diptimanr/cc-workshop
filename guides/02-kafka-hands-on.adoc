@@ -74,6 +74,24 @@ confluent kafka topic create latest-prices \
   --partitions 3 \
   --config cleanup.policy=compact \
   --config min.cleanable.dirty.ratio=0.01
+
+# Windows - Create topic for cryptocurrency prices
+confluent kafka topic create crypto-prices `
+  --partitions 3 `
+  --config retention.ms=604800000 `
+  --config cleanup.policy=delete
+
+# Windows - Create topic for price alerts (smaller retention)
+confluent kafka topic create price-alerts `
+  --partitions 1 `
+  --config retention.ms=86400000 `
+  --config cleanup.policy=delete
+
+# Windows - Create compacted topic for latest prices
+confluent kafka topic create latest-prices `
+  --partitions 3 `
+  --config cleanup.policy=compact `
+  --config min.cleanable.dirty.ratio=0.01  
 ----
 
 === Verify Topic Configuration
@@ -96,6 +114,10 @@ confluent kafka topic configuration list crypto-prices
 ----
 # Update topic configuration (example: increase retention)
 confluent kafka topic update crypto-prices \
+  --config retention.ms=1209600000
+
+# Windows - Update topic configuration (example: increase retention)
+confluent kafka topic update crypto-prices `
   --config retention.ms=1209600000
 
 # View updated configuration
@@ -151,6 +173,9 @@ source .env
 # - List of all connectors
 # - Connector ID and status
 # - Connection validation
+
+# Windows :
+confluent connect cluster create --config-file .\configs\connector-configs\http-source-coingecko.json
 ----
 
 == 🔍 Topic Data (5 minutes)
