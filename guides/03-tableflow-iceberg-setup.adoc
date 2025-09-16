@@ -72,6 +72,13 @@ confluent tableflow topic enable crypto-prices \
   --table-formats ICEBERG \
   --retention-ms 604800000
 
+# Windows - Enable Tableflow for the crypto-prices topic
+confluent tableflow topic enable crypto-prices `
+  --cluster $CC_KAFKA_CLUSTER `
+  --storage-type MANAGED `
+  --table-formats ICEBERG `
+  --retention-ms 604800000
+
 # Monitor materialization progress
 confluent tableflow topic describe crypto-prices --cluster $CC_KAFKA_CLUSTER
 
@@ -265,6 +272,17 @@ confluent tableflow api-key list
 **Cannot connect to Iceberg catalog**::
 - Verify Tableflow API key and secret are correct
 - Check organization UUID and environment ID in endpoint URL
+- Ensure catalog integration is active and healthy
+
+**GET request to Endpoint Unauthorized:401 error**::
+- Drop and recreate Secret as explained in the next paragraph
+- Detach iceberg_catalog and re-attach
+[source,sql]
+----
+-- Detach and re-attach catalog if needed
+DETACH iceberg_catalog;
+----
+
 - Ensure catalog integration is active and healthy
 
 **Secret creation fails**::
