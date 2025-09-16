@@ -72,6 +72,13 @@ confluent flink compute-pool create workshop-pool \
   --max-cfu 5 \
   --environment $CC_ENV_ID
 
+# Windows - Create a compute pool for Flink processing
+confluent flink compute-pool create cc-workshop-pool `
+  --cloud aws `
+  --region us-east-1 `
+  --max-cfu 5 `
+  --environment env-9g8pkm
+
 # List compute pools to verify creation
 confluent flink compute-pool list
 
@@ -194,6 +201,19 @@ SELECT
   END as trend_indicator
 FROM `crypto-prices-exploded`
 WHERE event_time >= CURRENT_TIMESTAMP - INTERVAL '5' MINUTES;
+
+-- Windows CMD prompt - Compare current prices across cryptocurrencies
+SELECT 
+  coin_id,
+  usd as current_price,
+  usd_24h_change as daily_change,
+  CASE 
+    WHEN usd_24h_change > 0 THEN 'UP'
+    WHEN usd_24h_change < 0 THEN 'DOWN'
+    ELSE 'FLAT'
+  END as trend_indicator
+FROM `crypto-prices-exploded`
+WHERE event_time >= CURRENT_TIMESTAMP - INTERVAL '5' MINUTES;
 ----
 
 === Price Change Filtering and Transformations
@@ -264,11 +284,25 @@ confluent tableflow topic enable price-alerts \
   --table-formats ICEBERG \
   --retention-ms 604800000
 
+# Windows - Enable Tableflow for the price-alerts topic created by Flink
+confluent tableflow topic enable price-alerts `
+  --cluster $CC_KAFKA_CLUSTER `
+  --storage-type MANAGED `
+  --table-formats ICEBERG `
+  --retention-ms 604800000
+
 # Enable Tableflow for the crypto-trends topic created by Flink
 confluent tableflow topic enable crypto-trends \
   --cluster $CC_KAFKA_CLUSTER \
   --storage-type MANAGED \
   --table-formats ICEBERG \
+  --retention-ms 604800000
+
+# Windows - Enable Tableflow for the crypto-trends topic created by Flink
+confluent tableflow topic enable crypto-trends `
+  --cluster $CC_KAFKA_CLUSTER `
+  --storage-type MANAGED `
+  --table-formats ICEBERG `
   --retention-ms 604800000
 
 # Monitor materialization progress
