@@ -118,7 +118,7 @@ confluent flink statement list
 # Verify Tableflow resources are gone
 confluent tableflow topic list
 
-# Expected output: Empty lists or "No resources found"
+# Expected output: Empty list or "No resources found"
 ----
 
 == 🧹 Standard Resource Cleanup (5 minutes)
