@@ -45,6 +45,7 @@ By the end of this section, you will have:
 
 == 🔍 Prerequisites Validation (3 minutes)
 
+
 === Check VSCode Confluent Extension
 
 . Open VSCode
@@ -78,6 +79,12 @@ If not installed, run:
 # Install Confluent CLI
 curl -sL --http1.1 https://cnfl.io/cli | sh -s -- latest
 ----
+----
+# Install Confluent CLI - Windows
+. Windows: Download ZIP file : https://docs.confluent.io/confluent-cli/current/install.html
+. Windows : Unzip , add the folder containing confluent.exe in PATH
+. Verify the Confluent CLI is installed -> confluent version
+----
 
 === Validate DuckDB Installation
 
@@ -90,6 +97,7 @@ duckdb --version
 ----
 
 If not installed, visit: https://duckdb.org/docs/installation/
+Windows - Add the folder containing "duckdb.exe" in Windows PATH
 
 == 🌍 Authentication & Environment Setup (7 minutes)
 
@@ -134,11 +142,22 @@ confluent environment use $CC_ENV_ID
 [source,bash]
 ----
 # Create a Basic cluster (suitable for development/workshop)
-confluent kafka cluster create workshop-cluster \
+confluent kafka cluster create cc-workshop-cluster \
   --cloud aws \
   --region us-east-1 \
   --type basic
 ----
+
+[source,bash]
+----
+# Windows - Create a Basic cluster (suitable for development/workshop)
+confluent kafka cluster create cc-workshop-cluster `
+--cloud aws `
+--region us-east-1 `
+--type basic
+----
+
+
 
 NOTE: Basic clusters are free and perfect for workshops.
 They have some limitations but are sufficient for our use case
