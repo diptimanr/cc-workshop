@@ -63,6 +63,7 @@ confluent kafka topic create crypto-prices \
   --config retention.ms=604800000 \
   --config cleanup.policy=delete
 
+# DO NOT CREATE THE REST OF THE TOPICS EXCEPT 'crypto-prices' NOW
 # Create topic for price alerts (smaller retention)
 confluent kafka topic create price-alerts \
   --partitions 1 \
